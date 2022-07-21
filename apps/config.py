@@ -29,7 +29,7 @@ class ProductionConfig(Config):
     REMEMBER_COOKIE_DURATION = 3600
 
     # PostgreSQL database
-    SQLALCHEMY_DATABASE_URI = 'postgresql://lzhsixfpvsfikr:76fea92acb170696b54c12f477fa532e88e88d9998f3d66c9690def109f4b18a@ec2-52-206-182-219.compute-1.amazonaws.com:5432/dbetbndmop262a'
+    
     
     # SQLALCHEMY_DATABASE_URI = '{}://{}:{}@{}:{}/{}'.format(
     #     os.getenv('DB_ENGINE'   , 'mysql'),
