@@ -1,0 +1,38 @@
+<div>
+    <!-- Dates Row -->
+    <div class="row">
+      <div style="padding: 15px">
+        <label for="start-date"> Start Date</label>
+        <input
+          class="form-control range-date"
+          style="border-color: black; width: 100%"
+          type="date"
+          id="start-date"
+          name="start-date"
+          value="{{default_start}}"
+        />
+      </div>
+      <div style="padding: 15px">
+        <label for="end-date"> End Date</label>
+        <input
+          class="form-control range-date"
+          style="border-color: black; width: 100%"
+          type="date"
+          id="end-date"
+          name="end-date"
+          value="{{default_end}}"
+        />
+      </div>
+      <div style="padding: 15px">
+        <input
+          class="form-control range-date"
+          style="border-color: black; width: 100%"
+          type="hidden"
+          id="current-channel"
+          name="current-channel"
+          value="{{defaultChanellName}}"
+        />
+      </div>
+    </div>
+    <!-- End of Dates Row -->
+  </div>

@@ -1,0 +1,617 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Dashboard {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+<div class="content">
+	<div class="page-inner">
+		<div class="container-fluid">
+			<div class="page-titles">
+			  <h3>View/ Edit Profile</h3>
+			</div>
+			<!-- row -->
+			<div class="row">
+			  <!-- Username Update -->
+			  <div class="col-lg-12">
+				<div class="card">
+				  <div class="card-header">
+					<h4 class="card-title">YOUR PROFILE INFORMATIONS</h4>
+				  </div>
+				  <div class="card-body">
+					<div class="basic-form">
+					  <form
+						class="form-valide-with-icon"
+						action="/update-username?user={{user.username}}"
+						method="POST"
+					  >
+						<div class="form-group">
+						  <label class="text-label">Username</label>
+						  <div class="input-group">
+							<div class="input-group-prepend">
+							  <span class="input-group-text">
+								<i class="fa fa-user"></i>
+							  </span>
+							</div>
+							<input
+							  type="text"
+							  class="form-control"
+							  id="username1"
+							  name="username"
+							  autocomplete="off"
+							  value="{{user.username}}"
+							/>
+						  </div>
+						</div>
+						<button
+						  type="submit"
+						  class="btn mr-2 btn-primary"
+						  style="background-color: #13b2e6; border-color: #13b2e6"
+						>
+						  Update Username
+						</button>
+						{% if message %}
+						<p style="color: red">{{ message }}</p>
+						{% endif %}
+					  </form>
+					</div>
+				  </div>
+				</div>
+			  </div>
+  
+			  <!-- SECURITY SETTINGS -->
+			  <div class="col-lg-12">
+				<div class="card">
+				  <div class="card-header">
+					<h4 class="card-title">SECURITY SETTINGS</h4>
+				  </div>
+				  <div class="card-body">
+					<div class="basic-form">
+					  <form
+						class="form-valide-with-icon"
+						action="/update-password?user={{user.username}}"
+						method="POST"
+					  >
+						<div class="form-group">
+						  <label
+							class="col-lg-4 col-form-label"
+							for="old-password"
+							>Current Password
+							<span class="text-danger">*</span>
+						  </label>
+						  <div class="col-lg-6">
+							<input
+							  type="password"
+							  class="form-control"
+							  id="old-password"
+							  name="old-password"
+							  placeholder="Enter your current password.."
+							/>
+						  </div>
+						</div>
+  
+						<div class="form-group">
+						  <label
+							class="col-lg-4 col-form-label"
+							for="new-password"
+							>New Password
+							<span class="text-danger">*</span>
+						  </label>
+						  <div class="col-lg-6">
+							<input
+							  type="password"
+							  class="form-control"
+							  id="new-password"
+							  name="new-password"
+							  placeholder="Choose a new safe one.."
+							/>
+						  </div>
+						</div>
+						<div class="form-group">
+						  <label
+							class="col-lg-4 col-form-label"
+							for="confirm-new-password"
+							>Confirm Password <span class="text-danger">*</span>
+						  </label>
+						  <div class="col-lg-6">
+							<input
+							  type="password"
+							  class="form-control"
+							  id="confirm-new-password"
+							  name="confirm-new-password"
+							  placeholder="..and confirm it!"
+							/>
+						  </div>
+						</div>
+  
+						<button
+						  type="submit"
+						  class="btn mr-2 btn-primary"
+						  style="background-color: #13b2e6; border-color: #13b2e6"
+						>
+						  Update Password
+						</button>
+						{% if pass_message %}
+						<p style="color: red">{{ pass_message }}</p>
+						{% endif %}
+					  </form>
+					</div>
+				  </div>
+				</div>
+			  </div>
+  
+			  <!-- ACCOUNT SETTINGS -->
+			  <div class="col-lg-12">
+				<div class="card">
+				  <div class="card-header">
+					<h4 class="card-title">BRANDING</h4>
+				  </div>
+				  <div class="card-body">
+					<div class="basic-form">
+					  <form
+						class="form-valide-with-icon"
+						enctype="multipart/form-data"
+						method="POST"
+						action="/update-files?user={{user.username}}"
+					  >
+						<div class="form-group">
+						  <label class="text-label">Logo</label>
+						  <div class="input-group">
+							<div class="input-group-prepend">
+							  <span class="input-group-text">
+								<i class="fa fa-file-image-o"></i>
+							  </span>
+							</div>
+							<input
+							  type="file"
+							  id="client-logo"
+							  name="client-logo"
+							  accept="image/*"
+							  title="Only images are allowed"
+							  class="form-control"
+							/>
+						  </div>
+						</div>
+  
+						<!-- If the user is an admin -->
+						{% if current_user.is_admin %}
+						<div class="form-group">
+						  <label class="text-label">Dashboard Data</label>
+						  <div class="input-group">
+							<div class="input-group-prepend">
+							  <span class="input-group-text">
+								<i class="fa fa-file-text-o"></i>
+							  </span>
+							</div>
+							<input
+							  type="file"
+							  id="data"
+							  name="data"
+							  type="file"
+							  title="Only Excel files are allowed"
+							  accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+							  class="form-control"
+							/>
+						  </div>
+						</div>
+						{%endif %}
+
+						{% if current_user.is_admin %}
+						<div class="form-group">
+						  <label class="text-label">Dashboard Model Validation Images Data</label>
+						  <div class="input-group">
+							<div class="input-group-prepend">
+							  <span class="input-group-text">
+								<i class="fa fa-file-text-o"></i>
+							  </span>
+							</div>
+							<input
+								multiple
+								id="imgdata"
+								name="imgdata[]"
+								type="file"
+								title="Only jpg and png files are allowed"
+								accept=".jpg, .png, jpeg"
+								class="form-control"
+							/>
+						  </div>
+						</div>
+						{%endif %}
+  
+						<button
+						  type="submit"
+						  class="btn mr-2 btn-primary"
+						  style="background-color: #13b2e6; border-color: #13b2e6"
+						>
+						  Update Files
+						</button>
+						{% if upload_message %}
+						<p style="color: red">{{ upload_message }}</p>
+						{% endif %}
+					  </form>
+					</div>
+				  </div>
+				</div>
+			  </div>
+  
+			  <!-- ACCOUNT SETTINGS -->
+			  <div class="col-lg-12">
+				<div class="card">
+				  <div class="card-header">
+					<h4 class="card-title">ACCOUNT SETTINGS</h4>
+				  </div>
+				  <div class="card-body">
+					<div class="basic-form">
+					  <form
+						class="form-valide-with-icon"
+						method="POST"
+						action="/delete-account?user={{user.username}}"
+					  >
+						<div class="form-group">
+						  <label class="text-label">Delete Account</label>
+						  <p class="text-muted font-size-sm">
+							Once you delete your account, there is no going back.
+							Please be certain.
+						  </p>
+						</div>
+  
+						<button
+						  id="delete-account"
+						  type="submit"
+						  name="delete-account"
+						  value="Delete Account"
+						  class="btn mr-2 btn-primary"
+						  style="background-color: #13b2e6; border-color: #13b2e6"
+						>
+						  Delete Account
+						</button>
+					  </form>
+					</div>
+				  </div>
+				</div>
+			  </div>
+			</div>
+		  </div>
+	</div>
+</div>
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+	<!-- Atlantis DEMO methods, don't include it in your project! -->
+	<script src="/static/assets/js/setting-demo.js"></script>
+	<script src="/static/assets/js/demo.js"></script>
+	
+	<script>
+
+		//multipleLineChart-----------------------------
+
+		multipleLineChart = document.getElementById('multipleLineChart').getContext('2d')
+		var myMultipleLineChart = new Chart(multipleLineChart, {
+			type: 'line',
+			data: {
+				labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+				datasets: [{
+					label: "Python",
+					borderColor: "#1d7af3",
+					pointBorderColor: "#FFF",
+					pointBackgroundColor: "#1d7af3",
+					pointBorderWidth: 2,
+					pointHoverRadius: 4,
+					pointHoverBorderWidth: 1,
+					pointRadius: 4,
+					backgroundColor: 'transparent',
+					fill: true,
+					borderWidth: 2,
+					data: [30, 45, 45, 68, 69, 90, 100, 158, 177, 200, 245, 256]
+				},{
+					label: "PHP",
+					borderColor: "#59d05d",
+					pointBorderColor: "#FFF",
+					pointBackgroundColor: "#59d05d",
+					pointBorderWidth: 2,
+					pointHoverRadius: 4,
+					pointHoverBorderWidth: 1,
+					pointRadius: 4,
+					backgroundColor: 'transparent',
+					fill: true,
+					borderWidth: 2,
+					data: [10, 20, 55, 75, 80, 48, 59, 55, 23, 107, 60, 87]
+				}, {
+					label: "Ruby",
+					borderColor: "#f3545d",
+					pointBorderColor: "#FFF",
+					pointBackgroundColor: "#f3545d",
+					pointBorderWidth: 2,
+					pointHoverRadius: 4,
+					pointHoverBorderWidth: 1,
+					pointRadius: 4,
+					backgroundColor: 'transparent',
+					fill: true,
+					borderWidth: 2,
+					data: [10, 30, 58, 79, 90, 105, 117, 160, 185, 210, 185, 194]
+				}]
+			},
+			options : {
+				responsive: true, 
+				maintainAspectRatio: false,
+				legend: {
+					position: 'top',
+				},
+				tooltips: {
+					bodySpacing: 4,
+					mode:"nearest",
+					intersect: 0,
+					position:"nearest",
+					xPadding:10,
+					yPadding:10,
+					caretPadding:10
+				},
+				layout:{
+					padding:{left:15,right:15,top:15,bottom:15}
+				}
+			}
+		});
+
+		//pie chart
+		pieChart = document.getElementById('pieChart').getContext('2d');
+
+		var myPieChart = new Chart(pieChart, {
+			type: 'pie',
+			data: {
+				datasets: [{
+					data: [50, 35, 15],
+					backgroundColor :["#1d7af3","#f3545d","#fdaf4b"],
+					borderWidth: 0
+				}],
+				labels: ['New Visitors', 'Subscribers', 'Active Users'] 
+			},
+			options : {
+				responsive: true, 
+				maintainAspectRatio: false,
+				legend: {
+					position : 'bottom',
+					labels : {
+						fontColor: 'rgb(154, 154, 154)',
+						fontSize: 11,
+						usePointStyle : true,
+						padding: 20
+					}
+				},
+				pieceLabel: {
+					render: 'percentage',
+					fontColor: 'white',
+					fontSize: 14,
+				},
+				tooltips: false,
+				layout: {
+					padding: {
+						left: 20,
+						right: 20,
+						top: 20,
+						bottom: 20
+					}
+				}
+			}
+		})
+
+
+
+
+
+		var totalIncomeChart = document.getElementById('totalIncomeChart').getContext('2d');
+		var mytotalIncomeChart = new Chart(totalIncomeChart, {
+			type: 'bar',
+			data: {
+				labels: ["S", "M", "T", "W", "T", "F", "S", "S", "M", "T"],
+				datasets : [{
+					label: "Total Income",
+					backgroundColor: '#ff9e27',
+					borderColor: 'rgb(23, 125, 255)',
+					data: [6, 4, 9, 5, 4, 6, 4, 3, 8, 10],
+				}],
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				legend: {
+					display: false,
+				},
+				scales: {
+					yAxes: [{
+						ticks: {
+							display: false //this will remove only the label
+						},
+						gridLines : {
+							drawBorder: false,
+							display : false
+						}
+					}],
+					xAxes : [ {
+						gridLines : {
+							drawBorder: false,
+							display : false
+						}
+					}]
+				},
+			}
+		});
+
+		$('#lineChart').sparkline([105,103,123,100,95,105,115], {
+			type: 'line',
+			height: '70',
+			width: '100%',
+			lineWidth: '2',
+			lineColor: '#ffa534',
+			fillColor: 'rgba(255, 165, 52, .14)'
+		});
+		// Chart with HTML Legends
+		htmlLegendsChart = document.getElementById('htmlLegendsChart').getContext('2d');
+
+		var gradientStroke = htmlLegendsChart.createLinearGradient(500, 0, 100, 0);
+		gradientStroke.addColorStop(0, '#177dff');
+		gradientStroke.addColorStop(1, '#80b6f4');
+
+		var gradientFill = htmlLegendsChart.createLinearGradient(500, 0, 100, 0);
+		gradientFill.addColorStop(0, "rgba(23, 125, 255, 0.7)");
+		gradientFill.addColorStop(1, "rgba(128, 182, 244, 0.3)");
+
+		var gradientStroke2 = htmlLegendsChart.createLinearGradient(500, 0, 100, 0);
+		gradientStroke2.addColorStop(0, '#f3545d');
+		gradientStroke2.addColorStop(1, '#ff8990');
+
+		var gradientFill2 = htmlLegendsChart.createLinearGradient(500, 0, 100, 0);
+		gradientFill2.addColorStop(0, "rgba(243, 84, 93, 0.7)");
+		gradientFill2.addColorStop(1, "rgba(255, 137, 144, 0.3)");
+
+		var gradientStroke3 = htmlLegendsChart.createLinearGradient(500, 0, 100, 0);
+		gradientStroke3.addColorStop(0, '#fdaf4b');
+		gradientStroke3.addColorStop(1, '#ffc478');
+
+		var gradientFill3 = htmlLegendsChart.createLinearGradient(500, 0, 100, 0);
+		gradientFill3.addColorStop(0, "rgba(253, 175, 75, 0.7)");
+		gradientFill3.addColorStop(1, "rgba(255, 196, 120, 0.3)");
+		
+		var myHtmlLegendsChart = new Chart(htmlLegendsChart, {
+			type: 'line',
+			data: {
+				labels: {{labels|safe}},
+				datasets: [ {
+					label: "Display",
+					borderColor: gradientStroke2,
+					pointBackgroundColor: gradientStroke2,
+					pointRadius: 0,
+					backgroundColor: gradientFill2,
+					legendColor: '#f3545d',
+					fill: true,
+					borderWidth: 1,
+					data: {{Display|safe}}
+				}, {
+					label: "Facebook",
+					borderColor: gradientStroke3,
+					pointBackgroundColor: gradientStroke3,
+					pointRadius: 0,
+					backgroundColor: gradientFill3,
+					legendColor: '#fdaf4b',
+					fill: true,
+					borderWidth: 1,
+					data: {{Facebook|safe}}
+				}, {
+					label: "GooglePLA",
+					borderColor: gradientStroke,
+					pointBackgroundColor: gradientStroke,
+					pointRadius: 0,
+					backgroundColor: gradientFill,
+					legendColor: '#177dff',
+					fill: true,
+					borderWidth: 1,
+					data: {{GooglePLA|safe}}
+				}, {
+					label: "GoogleSearch",
+					borderColor: gradientStroke,
+					pointBackgroundColor: gradientStroke,
+					pointRadius: 0,
+					backgroundColor: gradientFill,
+					legendColor: '#172dff',
+					fill: true,
+					borderWidth: 1,
+					data: {{GoogleSearch|safe}}
+				}, {
+					label: "Microsoft",
+					borderColor: gradientStroke,
+					pointBackgroundColor: gradientStroke,
+					pointRadius: 0,
+					backgroundColor: gradientFill,
+					legendColor: '#172dff',
+					fill: true,
+					borderWidth: 1,
+					data: {{Microsoft|safe}}
+				}
+				,{
+					label: "BaseRevenue",
+					borderColor: gradientStroke,
+					pointBackgroundColor: gradientStroke,
+					pointRadius: 0,
+					backgroundColor: gradientFill,
+					legendColor: '#172dff',
+					fill: true,
+					borderWidth: 1,
+					data: {{BaseRevenue|safe}}
+				}]
+			},
+			options : {
+				responsive: true, 
+				maintainAspectRatio: false,
+				legend: {
+					display: false
+				},
+				tooltips: {
+					bodySpacing: 4,
+					mode:"nearest",
+					intersect: 0,
+					position:"nearest",
+					xPadding:10,
+					yPadding:10,
+					caretPadding:10
+				},
+				layout:{
+					padding:{left:15,right:15,top:15,bottom:15}
+				},
+				scales: {
+					yAxes: [{
+						ticks: {
+							fontColor: "rgba(0,0,0,0.5)",
+							fontStyle: "500",
+							beginAtZero: false,
+							maxTicksLimit: 5,
+							padding: 20
+						},
+						gridLines: {
+							drawTicks: false,
+							display: false
+						}
+					}],
+					xAxes: [{
+						gridLines: {
+							zeroLineColor: "transparent"
+						},
+						ticks: {
+							padding: 20,
+							fontColor: "rgba(0,0,0,0.5)",
+							fontStyle: "500"
+						}
+					}]
+				}, 
+				legendCallback: function(chart) { 
+					var text = []; 
+					text.push('<ul class="' + chart.id + '-legend html-legend">'); 
+					for (var i = 0; i < chart.data.datasets.length; i++) { 
+						text.push('<li><span style="background-color:' + chart.data.datasets[i].legendColor + '"></span>'); 
+						if (chart.data.datasets[i].label) { 
+							text.push(chart.data.datasets[i].label); 
+						} 
+						text.push('</li>'); 
+					} 
+					text.push('</ul>'); 
+					return text.join(''); 
+				}  
+			}
+		});
+
+		var myLegendContainer = document.getElementById("myChartLegend");
+
+		// generate HTML legend
+		myLegendContainer.innerHTML = myHtmlLegendsChart.generateLegend();
+
+		// bind onClick event to all LI-tags of the legend
+		var legendItems = myLegendContainer.getElementsByTagName('li');
+		for (var i = 0; i < legendItems.length; i += 1) {
+			legendItems[i].addEventListener("click", legendClickCallback, false);
+		}
+	
+	</script>
+
+{% endblock javascripts %}

@@ -1,0 +1,742 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Dashboard {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+			
+	<div class="content">
+		<div class="panel-header bg-primary-gradient">
+			<div class="page-inner py-5">
+				<div class="d-flex align-items-left align-items-md-center flex-column flex-md-row">
+					<div>
+						<div class="profile-picture"> 
+							<div class="avatar avatar-xl"> 
+							  <img
+							  src="{{ url_for('user_managament_blueprint.serve_client_logo', user_id=userid)}}"
+							  alt="..."
+							  class="avatar-img rounded-circle"
+							  />
+							</div> 
+						  </div> 
+						<h2 class="text-white pb-2 fw-bold">Model Output</h2>
+						<!-- <h5 class="text-white op-7 mb-2">Free Bootstrap 4 Admin Dashboard</h5> -->
+					</div>
+					
+				</div>
+			</div>
+		</div>
+		<div class="page-inner mt--5">
+			
+
+			<div class="row mt--2">
+				<!--chart2 -->
+				<div class="col-md-6">
+					<div class="card">
+						<div class="card-header">
+							<div class="card-title">Media Contribution Over Time</div>
+						</div>
+						<div class="card-body">
+							<div class="chart-container">
+								<canvas id="htmlLegendsChart"></canvas>
+							</div>
+							<!-- <div id="myChartLegend"></div> -->
+						</div>
+					</div>
+				</div>
+
+				<!--chart2 -->
+				<div class="col-md-6">
+					<div class="card">
+						<div class="card-header">
+							<div class="card-title">Media Channel Contribution</div>
+						</div>
+						<div class="card-body">
+							<div class="chart-container">
+								<canvas id="pieChart"></canvas>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row mt--2">
+				<div class="col-md-6">
+					<div class="card">
+						<div class="card-header">
+							<div class="card-title">Baseline Composition Over Time</div>
+						</div>
+						<div class="card-body">
+							<div class="chart-container">
+								<canvas id="htmllegendchartBaseline"></canvas>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6"> 
+					<div class="card"> 
+					  <div class="card-header"> 
+						<div class="card-title">
+							Return on Ad Spend &nbsp;&nbsp;&nbsp;
+							<input type="hidden" name="s" id="userid" value="{{userid}}">
+							{% for channel in Tags%}
+							<button type="button" name="channel" value="{{channel}}" onclick="RoasFilter('{{channel}}')" class="btn btn-primary btn-rounded btn-sm">{{channel}}</button>
+							{% endfor %}
+						</div> 
+					  </div> 
+					  <div class="card-body">
+						<div class="chart-container">
+						  <canvas id="lineChart" ></canvas>
+						</div>
+					  </div> 
+					</div>
+				  </div>
+			</div>
+
+			
+			<div class="row mt--2">					
+				<div class="col-md-6"> 
+					<div class="card"> 
+					  <div class="card-header"> 
+						<div class="card-title">
+							Impressions vs Adstock <br>
+							{% for channel in Tags%}
+							<button type="button" name="channel" value="{{channel}}" onclick="AdstockedImpr('{{channel}}')" class="btn btn-primary btn-rounded btn-sm">{{channel}}</button>
+							{% endfor %}
+						</div> 
+					  </div> 
+					  <div class="card-body">
+						<div class="chart-container">
+							<canvas id="ImprChart" style="width: 50%; height: 50%"></canvas>
+						</div>						
+						<div id="myChartLegendImpr"></div>
+					   </div>
+					</div>
+				  </div>
+				  <div class="col-md-6"> 
+					<div class="card"> 
+					  <div class="card-header"> 
+						<div class="card-title">
+							Spend vs Adstocked Spend <br>
+							{% for channel in Tags%}
+							<button type="button" name="channel" value="{{channel}}" onclick="AdstockedSpend('{{channel}}')" class="btn btn-primary btn-rounded btn-sm">{{channel}}</button>
+							{% endfor %}
+						</div> 
+					  </div> 
+					  <div class="card-body">
+						<div class="chart-container">
+							<canvas id="SpendChart" style="width: 50%; height: 50%"></canvas>
+						</div>						
+						<div id="myChartLegendSpend"></div>
+					   </div>
+					</div>
+				  </div>
+			</div>
+		</div>
+	</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+	<!-- Atlantis DEMO methods, don't include it in your project! -->
+	<script src="/static/assets/js/setting-demo.js"></script>
+	<script src="/static/assets/js/demo.js"></script>
+	
+	<script>
+        var ChannelColorArr = {{ChannelColorArr|safe}}
+		var defaultval = 'Display';
+		RoasFilter(defaultval);
+		AdstockedSpend(defaultval);
+		AdstockedImpr(defaultval);
+		function RoasFilter(val) {
+			$.ajax({
+				url: "/index/rosa",
+				type: "POST",
+				data: {
+					filter: val,
+					user_id:$('#userid').val(),
+					content_type: "json",
+				},
+				}).then(function (response) {
+					multipleLineChart = document.getElementById('lineChart').getContext('2d')
+					var RoasArr = [];
+					for (var i=0;i<response.WeeklySpendLine.length;i++){
+						var roasobj = {};
+						roasobj['x'] = response.WeeklySpendLine[i]
+						roasobj['y'] = response.RevenueLine[i]
+						roasobj['z'] = response.RoasLine[i]*1000
+						RoasArr.push(roasobj)
+					}
+					console.log('==== roas array ===')
+					console.log(RoasArr)
+					var myMultipleLineChart = new Chart(multipleLineChart, {
+						type: 'line',
+						data: {
+							labels: response.WeeklySpendLine,
+							datasets: [{
+								label: "{{first|safe}}",
+								borderColor: "#1d7af3",
+								pointBorderColor: "#FFF",
+								pointBackgroundColor: "#1d7af3",
+								pointBorderWidth: 2,
+								pointHoverRadius: 4,
+								pointHoverBorderWidth: 1,
+								pointRadius: 0,
+								backgroundColor: 'transparent',
+								fill: true,
+								borderWidth: 2,
+								data: response.RevenueLine
+							}]
+						},
+						// data: RoasArr,
+						options : {
+							responsive: true, 
+							maintainAspectRatio: false,
+							legend: {
+								position: 'top',
+							},
+							tooltips: {
+								bodySpacing: 4,
+								mode:"nearest",
+								intersect: 0,
+								position:"nearest",
+								xPadding:10,
+								yPadding:10,
+								caretPadding:10,
+								callbacks: {
+									label: function(tooltipItem, data) {
+										var text =  'Weekly Spend : ' +(response.WeeklySpendLine[tooltipItem.index]/1000).toFixed(2)+'K' + ', Revenue : ' +(tooltipItem.yLabel/1000).toFixed(2)+'K' + ', Roas : '+response.RoasLine[tooltipItem.index].toFixed(2)
+									return text;
+									}
+								}
+							},
+							scales: {
+								yAxes: [{
+								scaleLabel: {
+									display: true,
+									labelString: 'Orders'
+								},	
+								ticks: {
+									callback:function(value , index) {
+										return value.toLocaleString("en-US")
+									}
+								}
+								}],
+								xAxes: [{
+								scaleLabel: {
+									display: true,
+									labelString: 'Weekly Spend'
+								},
+								ticks: {
+										callback:function(value , index) {
+											
+											return Math.round(value/1000)+'K';
+										}
+									}
+								}]
+							},
+							layout:{
+								padding:{left:15,right:15,top:15,bottom:15}
+							}
+						}
+					});
+				})
+		}
+		function AdstockedSpend(val) {
+			$.ajax({
+				url: "/index/adstockedspend",
+				type: "POST",
+				data: {
+					filter: val,
+					user_id:$('#userid').val(),
+					content_type: "json",
+				},
+				}).then(function (response) {					
+					SpendChart = document.getElementById('SpendChart').getContext('2d');
+					var myPieChart = new Chart(SpendChart, {
+						type: 'bar',
+						data: {
+							datasets: [{
+								label:'Display',
+								data: response.Bar_adsctocked_Spend,
+								backgroundColor :"#1d7af3",
+								borderWidth: 1
+							},{
+								label:'Display Adstocked',
+								data: response.Line_adsctocked_Spend,
+								borderColor:'red',
+								type: 'line',
+								pointRadius:0,
+								borderWidth: 1
+							}],
+							labels: response.AdsctockedLabels
+						},
+						options : {
+							responsive: true, 
+							maintainAspectRatio: false,
+							legend: {
+								display:true,
+								position : 'bottom',
+								labels : {
+									fontColor: 'rgb(154, 154, 154)',
+									fontSize: 12,
+									usePointStyle : true,
+									padding: 20
+								}
+							},
+							tooltips:{
+								callbacks: {
+									label: function(tooltipItem, data) {
+										var text =  ( Number((tooltipItem.yLabel).toFixed(2)).toLocaleString("en-US"))
+									return text;
+									}
+								}
+							},
+							scales: {
+								yAxes: [{
+								scaleLabel: {
+									display: true,
+									labelString: 'Spend'
+								},
+								ticks: {
+									callback:function(value , index) {
+										return value.toLocaleString("en-US")
+									}
+								}
+								}],
+								xAxes: [{
+								scaleLabel: {
+									display: true,
+									labelString: 'Week'
+								}
+								}]
+							},
+							layout: {
+								padding: {
+									left: 20,
+									right: 20,
+									top: 20,
+									bottom: 20
+								}
+							}
+						}
+					})
+				})
+		}
+		function AdstockedImpr(val) {
+			$.ajax({
+				url: "/index/adstockedimpr",
+				type: "POST",
+				data: {
+					filter: val,
+					user_id:$('#userid').val(),
+					content_type: "json",
+				},
+				}).then(function (response) {
+					ImprChart = document.getElementById('ImprChart').getContext('2d');
+					var myPieChart = new Chart(ImprChart, {
+						type: 'bar',
+						data: {
+							datasets: [{
+								label:'Display',
+								data: response.Bar_adsctocked_Impr,
+								backgroundColor :"#1d7af3",
+								borderWidth: 1
+							},{
+								label:'Display Adstocked',
+								data: response.Line_adsctocked_Impr,
+								borderColor:'red',
+								type: 'line',
+								pointRadius:0,
+								borderWidth: 1
+
+							}],
+							labels: response.AdsctockedLabels
+						},
+						options : {
+							responsive: true, 
+							maintainAspectRatio: false,
+							legend: {
+								display:true,
+								position : 'bottom',
+								labels : {
+									fontColor: 'rgb(154, 154, 154)',
+									fontSize: 12,
+									usePointStyle : true,
+									padding: 20,
+								}
+							},
+							pieceLabel: {
+								render: 'percentage',
+								fontColor: 'white',
+								fontSize: 14,
+							},
+							tooltips:{
+								callbacks: {
+									label: function(tooltipItem, data) {
+										var text =  ( Number((tooltipItem.yLabel).toFixed(2)).toLocaleString("en-US"))
+									return text;
+									}
+								}
+							},
+							scales: {
+								yAxes: [{
+								scaleLabel: {
+									display: true,
+									labelString: 'Impressions'
+								},
+								ticks: {
+									callback:function(value , index) {
+										return value.toLocaleString("en-US")
+									}
+								}
+								}],
+								xAxes: [{
+								scaleLabel: {
+									display: true,
+									labelString: 'Week'
+								}
+								}]
+							},
+							layout: {
+								padding: {
+									left: 20,
+									right: 20,
+									top: 20,
+									bottom: 20
+								}
+							}
+						}
+					})
+
+				})
+		}
+		
+
+		//pie chart
+		pieChart = document.getElementById('pieChart').getContext('2d');
+        var MediaPieChartLabels = {{labels3|safe}}
+		var backgroundColorArr = [];
+		for (var i=0;i<MediaPieChartLabels.length;i++) {
+			backgroundColorArr[i] = ChannelColorArr[MediaPieChartLabels[i]]
+		}
+		var myPieChart = new Chart(pieChart, {
+			type: 'pie',
+			data: {
+				datasets: [{
+					data: {{totalContribution|safe}},
+					backgroundColor :backgroundColorArr,
+					borderWidth: 0
+				}],
+				labels: {{labels3|safe}} 
+			},
+			options : {
+				responsive: true, 
+				maintainAspectRatio: false,
+				legend: {
+					position : 'bottom',
+					labels : {
+						fontColor: 'rgb(154, 154, 154)',
+						fontSize: 11,
+						usePointStyle : true,
+						padding: 20
+					}
+				},
+				pieceLabel: {
+					render: 'percentage',
+					fontColor: 'white',
+					fontSize: 14,
+				},
+				
+				layout: {
+					padding: {
+						left: 20,
+						right: 20,
+						top: 20,
+						bottom: 20
+					}
+				}
+			}
+		})
+
+
+
+		// Chart with HTML Legends
+		htmlLegendsChart = document.getElementById('htmlLegendsChart').getContext('2d');
+
+		
+	
+        var basesaleData = []
+		var basesaleobj = {}
+		var serverData = {{StackedPlotContributionData|safe}}
+		console.log('StackedPlotContributionData StackedPlotContributionData data');
+		const baseval = serverData['Base Revenue'];
+		delete serverData['Base Revenue'];
+
+		// serverData['Base Revenue'] = baseval;
+					
+		serverData= Object.assign({'Base Revenue':baseval},serverData)
+		console.log(serverData);
+		for (const[index, [key, value]] of Object.entries(Object.entries(serverData))) {
+		    
+			basesaleobj['label'] = key
+			
+			basesaleobj['data'] = value
+			basesaleobj['borderColor'] = ChannelColorArr[key]
+			basesaleobj['pointBackgroundColor'] = ChannelColorArr[key]
+			basesaleobj['backgroundColor'] = ChannelColorArr[key]
+			basesaleobj['pointRadius'] = 0
+			basesaleobj['borderWidth'] = 1
+			basesaleData.push({...basesaleobj})
+		
+		}
+		var myHtmlLegendsChart = new Chart(htmlLegendsChart, {
+			type: 'line',
+			data: {
+				labels: {{labels|safe}},
+				datasets: basesaleData
+			},
+			options : {
+				responsive: true, 
+				maintainAspectRatio: false,
+				legend: {
+					display:true,
+					position : 'bottom',
+					labels : {
+						fontColor: 'rgb(154, 154, 154)',
+						fontSize: 12,
+						usePointStyle : true,
+						padding: 20
+					}
+				},
+				tooltips: {
+					bodySpacing: 4,
+					mode:"nearest",
+					intersect: 0,
+					position:"nearest",
+					xPadding:10,
+					yPadding:10,
+					caretPadding:10,
+					callbacks: {
+						label: function(tooltipItem, data) {
+							var text =  ( Number((tooltipItem.yLabel).toFixed(2)).toLocaleString("en-US"))
+						return text;
+						}
+					}
+				},
+				layout:{
+					padding:{left:15,right:15,top:15,bottom:15}
+				},
+				scales: {
+
+					yAxes: [{
+						stacked: true,
+						ticks: {
+							fontColor: "rgba(0,0,0,0.5)",
+							fontStyle: "500",
+							beginAtZero: false,
+							maxTicksLimit: 5,
+							padding: 20,
+							callback:function(value , index) {
+								return value.toLocaleString("en-US")
+							}
+						},
+						gridLines: {
+							drawTicks: false,
+							display: false
+						}
+					}],
+					xAxes: [{
+						gridLines: {
+							zeroLineColor: "transparent"
+						},
+						ticks: {
+							padding: 20,
+							fontColor: "rgba(0,0,0,0.5)",
+							fontStyle: "500"
+						},
+						stacked: true
+					}]
+				}, 
+			}
+		});
+
+		// Chart with HTML Legends for Baseline
+		htmllegendchartBaseline = document.getElementById('htmllegendchartBaseline').getContext('2d');
+
+		var gradientStroke1 = htmllegendchartBaseline.createLinearGradient(500, 0, 100, 0);
+		gradientStroke1.addColorStop(0, '#215f00');
+		gradientStroke1.addColorStop(1, '#215f00');
+
+		var gradientFill1 = htmllegendchartBaseline.createLinearGradient(500, 0, 100, 0);
+		gradientFill1.addColorStop(0, "rgba(23, 125, 255, 0.7)");
+		gradientFill1.addColorStop(1, "rgba(128, 182, 244, 0.3)");
+
+		var gradientStroke2 = htmllegendchartBaseline.createLinearGradient(500, 0, 100, 0);
+		gradientStroke2.addColorStop(0, '#f3545d');
+		gradientStroke2.addColorStop(1, '#ff8990');
+
+		var gradientFill2 = htmllegendchartBaseline.createLinearGradient(500, 0, 100, 0);
+		gradientFill2.addColorStop(0, "rgba(243, 84, 93, 0.7)");
+		gradientFill2.addColorStop(1, "rgba(255, 137, 144, 0.3)");
+
+		var gradientStroke3 = htmllegendchartBaseline.createLinearGradient(500, 0, 100, 0);
+		gradientStroke3.addColorStop(0, '#fdaf4b');
+		gradientStroke3.addColorStop(1, '#ffc478');
+
+		var gradientFill3 = htmllegendchartBaseline.createLinearGradient(500, 0, 100, 0);
+		gradientFill3.addColorStop(0, "rgba(253, 175, 75, 0.7)");
+		gradientFill3.addColorStop(1, "rgba(255, 196, 120, 0.3)");
+		
+		var gradientStroke4 = htmllegendchartBaseline.createLinearGradient(500, 0, 100, 0);
+		gradientStroke4.addColorStop(0, '#3345a9');
+		gradientStroke4.addColorStop(1, '#344083');
+
+		var gradientFill4 = htmllegendchartBaseline.createLinearGradient(500, 0, 100, 0);
+		gradientFill4.addColorStop(0, "#5e72e4");
+		gradientFill4.addColorStop(1, "#9aa6e5");
+
+		var gradientStroke5 = htmllegendchartBaseline.createLinearGradient(500, 0, 100, 0);
+		gradientStroke5.addColorStop(0, '#006043');
+		gradientStroke5.addColorStop(1, '#009366');
+
+		var gradientFill5 = htmllegendchartBaseline.createLinearGradient(500, 0, 100, 0);
+		gradientFill5.addColorStop(0, "#00ad79");
+		gradientFill5.addColorStop(1, "#58a78f");
+		
+		var gradientStroke6 = htmllegendchartBaseline.createLinearGradient(500, 0, 100, 0);
+		gradientStroke6.addColorStop(0, '#00458f');
+		gradientStroke6.addColorStop(1, '#00458f');
+
+		var gradientFill6 = htmllegendchartBaseline.createLinearGradient(500, 0, 100, 0);
+		gradientFill6.addColorStop(0, "#007bff");
+		gradientFill6.addColorStop(1, "#406995");
+		
+
+		var gradientStroke7 = htmllegendchartBaseline.createLinearGradient(500, 0, 100, 0);
+		gradientStroke7.addColorStop(0, '#110e0f');
+		gradientStroke7.addColorStop(1, '#110e0f');
+
+		var gradientFill7 = htmllegendchartBaseline.createLinearGradient(500, 0, 100, 0);
+		gradientFill7.addColorStop(0, "#644a53");
+		gradientFill7.addColorStop(1, "#5e3442");
+
+		var gradientStroke8 = htmllegendchartBaseline.createLinearGradient(500, 0, 100, 0);
+		gradientStroke8.addColorStop(0, '#D3959B');
+		gradientStroke8.addColorStop(1, '#D3959B');
+
+		var gradientFill8 = htmllegendchartBaseline.createLinearGradient(500, 0, 100, 0);
+		gradientFill8.addColorStop(0, "#BFE6BA");
+		gradientFill8.addColorStop(1, "#BFE6BA");
+
+		var colorobj = {}
+		colorobj['gradientStroke0'] = gradientStroke1
+		colorobj['gradientFill0'] = gradientFill1
+		colorobj['gradientStroke1'] = gradientStroke2
+		colorobj['gradientFill1'] = gradientFill2
+		colorobj['gradientStroke2'] = gradientStroke3
+		colorobj['gradientFill2'] = gradientFill3
+		colorobj['gradientStroke3'] = gradientStroke4
+		colorobj['gradientFill3'] = gradientFill4
+		colorobj['gradientStroke4'] = gradientStroke5
+		colorobj['gradientFill4'] = gradientFill5
+		colorobj['gradientStroke5'] = gradientStroke6
+		colorobj['gradientFill5'] = gradientFill6
+		colorobj['gradientStroke6'] = gradientStroke7
+		colorobj['gradientFill6'] = gradientFill7
+		colorobj['gradientStroke7'] = gradientStroke8
+		colorobj['gradientFill7'] = gradientFill8
+
+        var basesaleData = []
+		var basesaleobj = {}
+		var serverData = {{BaseSaleData|safe}}
+
+		console.log('=== Baseline Composition Over Time === ');
+		
+		
+		for (const[index, [key, value]] of Object.entries(Object.entries(serverData))) {
+		    if(key.includes('macro_gen_')){
+				basesaleobj['label'] = (key.replace('macro_gen_','')).replace('_',' ')		
+			}else if(key.includes('macro_notable_')){
+				basesaleobj['label'] = (key.replace('macro_notable_','')).replace('_',' ')				
+			}else{
+				basesaleobj['label'] = key
+			}
+			basesaleobj['data'] = value
+			basesaleobj['borderColor'] = colorobj['gradientStroke'+index]
+			basesaleobj['pointBackgroundColor'] = colorobj['gradientStroke'+index]
+			basesaleobj['backgroundColor'] = colorobj['gradientFill'+index]
+			basesaleobj['pointRadius'] = 0
+			basesaleobj['borderWidth'] = 1
+			basesaleData.push({...basesaleobj})
+		
+		}
+		console.log(basesaleData);
+		var myhtmllegendchartBaseline = new Chart(htmllegendchartBaseline, {
+			type: 'line',
+			data: {
+				labels: {{Baseline_labels|safe}},
+				datasets: basesaleData
+			},
+			options : {
+				responsive: true, 
+				maintainAspectRatio: false,
+				legend: {
+					display:true,
+					position : 'bottom',
+					labels : {
+						fontColor: 'rgb(154, 154, 154)',
+						fontSize: 10,
+						usePointStyle : true,
+						paddingBottom: 10,
+					}
+				},
+				tooltips: {
+					bodySpacing: 4,
+					mode:"nearest",
+					intersect: 0,
+					position:"nearest",
+					xPadding:10,
+					yPadding:10,
+					caretPadding:10,
+					callbacks: {
+						label: function(tooltipItem, data) {
+							var text =  ( Number((tooltipItem.yLabel).toFixed(2)).toLocaleString("en-US"))
+						return text;
+						}
+					}
+				},
+				layout:{
+					padding:{left:15,right:15,top:15,bottom:15}
+				},
+				scales: {
+					yAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: 'Revenue'
+					},
+					ticks: {
+						callback:function(value , index) {
+							return value.toLocaleString("en-US")
+						}
+					},
+					stacked:true
+					}],
+					xAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: 'Week'
+					},
+					stacked:true
+					}]
+				} 
+			}
+		});
+	
+	</script>
+
+{% endblock javascripts %}

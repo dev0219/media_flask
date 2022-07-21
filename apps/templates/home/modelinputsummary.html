@@ -1,0 +1,329 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Dashboard {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+			
+	<div class="content">
+		<div class="panel-header bg-primary-gradient">
+			<div class="page-inner py-5">
+				<div class="d-flex align-items-left align-items-md-center flex-column flex-md-row">
+					<div>
+						<div class="profile-picture"> 
+							<div class="avatar avatar-xl"> 
+							  <img
+							  src="{{ url_for('user_managament_blueprint.serve_client_logo', user_id=userid)}}"
+							  alt="..."
+							  class="avatar-img rounded-circle"
+							  />
+							</div> 
+						  </div> 
+						<h2 class="text-white pb-2 fw-bold">Model Input Summary</h2>
+						<!-- <h5 class="text-white op-7 mb-2">Free Bootstrap 4 Admin Dashboard</h5> -->
+					</div>
+					
+				</div>
+			</div>
+		</div>
+		
+			
+		<div class="page-inner mt--5">
+			<div class="row mt--2">
+				<div class="col-md-12"> 
+					<div class="card"> 
+					  <div class="card-header"> 
+						<div class="card-title">
+							Revenue Over Time
+						</div> 
+					  </div> 
+					  <div class="card-body">
+						<div class="chart-container">
+						  <canvas id="lineChartRevenue" ></canvas>
+						</div>
+					  </div> 
+					</div>
+				</div>
+				<div class="col-md-12"> 
+					<div class="card"> 
+					  <div class="card-header"> 
+						<div class="card-title">
+							Spend Over Time
+						</div> 
+					  </div> 
+					  <div class="card-body">
+						<div class="chart-container">
+						  <canvas id="lineChartSpend" ></canvas>
+						</div>
+					  </div> 
+					</div>
+				</div>
+				<div class="col-md-12"> 
+					<div class="card"> 
+						<div class="card-header"> 
+						<div class="card-title">
+							Impressions Over Time
+							<input type="hidden" name="s" id="userid" value="{{userid}}">
+						</div> 
+						</div> 
+						<div class="card-body">
+						<div class="chart-container">
+							<canvas id="lineChartImpressions" ></canvas>
+						</div>
+						</div> 
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+	<!-- Atlantis DEMO methods, don't include it in your project! -->
+	<script src="/static/assets/js/setting-demo.js"></script>
+	<script src="/static/assets/js/demo.js"></script>
+	
+	<script>
+		// Scenario Revenue projection //
+        var InitialData = {{DFData|safe}}
+		var ChannelColorArr = {{ChannelColorArr|safe}}
+		var spendAll = [];
+		var spendobj = {};
+		var imprAll = [];
+		var improbj = {};
+		for (const[index, [key, value]] of Object.entries(Object.entries(InitialData))) {
+				if(key.includes('spend_')){
+					spendobj['label'] = (key.replace('spend_','')).replace('_',' ')	
+					spendobj['borderColor'] = ChannelColorArr[spendobj['label']]
+					spendobj['pointBorderColor'] = ChannelColorArr[spendobj['label']]
+					spendobj['pointBorderColor'] = ChannelColorArr[spendobj['label']]
+					spendobj['pointBorderWidth'] = 2
+					spendobj['pointHoverRadius'] = 4
+					spendobj['pointHoverBorderWidth'] = 1
+					spendobj['pointRadius'] = 0
+					spendobj['backgroundColor'] = ChannelColorArr[spendobj['label']]
+					spendobj['fill'] = true
+					spendobj['borderWidth'] = 2
+					spendobj['data'] = value
+					spendAll.push({...spendobj})
+				}else if (key.includes('impr_')){
+					improbj['label'] = (key.replace('impr_','')).replace('_',' ')
+					improbj['borderColor'] = ChannelColorArr[improbj['label']]
+					improbj['pointBorderColor'] = ChannelColorArr[improbj['label']]
+					improbj['pointBorderColor'] = ChannelColorArr[improbj['label']]
+					improbj['pointBorderWidth'] = 2
+					improbj['pointHoverRadius'] = 4
+					improbj['pointHoverBorderWidth'] = 1
+					improbj['pointRadius'] = 0
+					improbj['backgroundColor'] = ChannelColorArr[improbj['label']]
+					improbj['fill'] = true
+					improbj['borderWidth'] = 2
+					improbj['data'] = value
+					imprAll.push({...improbj})
+				}else{
+
+				}			
+		}
+		
+
+
+		multipleLineChart = document.getElementById('lineChartRevenue').getContext('2d')
+		var myMultipleLineChart = new Chart(multipleLineChart, {
+			type: 'line',
+			data: {
+				labels: InitialData['Day'],
+				datasets: [{
+					label: "Revenue",
+					borderColor: "#1d7af3",
+					pointBorderColor: "#FFF",
+					pointBackgroundColor: "#1d7af3",
+					pointBorderWidth: 2,
+					pointHoverRadius: 4,
+					pointHoverBorderWidth: 1,
+					pointRadius: 0,
+					backgroundColor: "#1d7af3",
+					fill: false,
+					borderWidth: 2,
+					data: InitialData['Revenue']
+				}]
+			},
+			options : {
+				responsive: true, 
+				maintainAspectRatio: false,
+				legend: {
+					display:false,
+					position : 'bottom',
+					labels : {
+						fontColor: 'rgb(154, 154, 154)',
+						fontSize: 12,
+						usePointStyle : true,
+						padding: 20
+					}
+				},
+				tooltips: {
+					bodySpacing: 4,
+					mode:"nearest",
+					intersect: 0,
+					position:"nearest",
+					xPadding:10,
+					yPadding:10,
+					caretPadding:10,
+					callbacks: {
+						label: function(tooltipItem, data) {
+							var text =  ( Number((tooltipItem.yLabel).toFixed(2)).toLocaleString("en-US"))
+						return text;
+						}
+					}
+				},
+				scales: {
+					yAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: 'Revenue'
+					},
+					ticks: {
+						callback:function(value , index) {
+							return value.toLocaleString("en-US")
+						}
+					}
+					}],
+					xAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: 'Day'
+					}
+					}]
+				},
+				layout:{
+					padding:{left:15,right:15,top:15,bottom:15}
+				}
+			}
+		});
+		SpendmultipleLineChart = document.getElementById('lineChartSpend').getContext('2d')
+		var mySpendMultipleLineChart = new Chart(SpendmultipleLineChart, {
+			type: 'line',
+			data: {
+				labels: {{DFData['Day']|safe}},
+				datasets: spendAll
+			},
+			options : {
+				responsive: true, 
+				maintainAspectRatio: false,
+				legend: {
+					display:true,
+					position : 'bottom',
+					labels : {
+						fontColor: 'rgb(154, 154, 154)',
+						fontSize: 12,
+						usePointStyle : true,
+						padding: 20
+					}
+				},
+				tooltips: {
+					bodySpacing: 4,
+					mode:"nearest",
+					intersect: 0,
+					position:"nearest",
+					xPadding:10,
+					yPadding:10,
+					caretPadding:10,
+					callbacks: {
+						label: function(tooltipItem, data) {
+							var text =  ( Number((tooltipItem.yLabel).toFixed(2)).toLocaleString("en-US"))
+						return text;
+						}
+					}
+				},
+				scales: {
+					yAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: ''
+					},
+					ticks: {
+						callback:function(value , index) {
+							return value.toLocaleString("en-US")
+						}
+					},
+					stacked: true
+					}],
+					xAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: 'Day'
+					},
+					stacked: true
+					}]
+				},
+				layout:{
+					padding:{left:15,right:15,top:15,bottom:15}
+				}
+			}
+		});
+		ImpressionsmultipleLineChart = document.getElementById('lineChartImpressions').getContext('2d')
+		var myImpressionsMultipleLineChart = new Chart(ImpressionsmultipleLineChart, {
+			type: 'line',
+			data: {
+				labels: {{DFData['Day']|safe}},
+				datasets: imprAll
+			},
+			options : {
+				responsive: true, 
+				maintainAspectRatio: false,
+				legend: {
+					display:true,
+					position : 'bottom',
+					labels : {
+						fontColor: 'rgb(154, 154, 154)',
+						fontSize: 12,
+						usePointStyle : true,
+						padding: 20
+					}
+				},
+				tooltips: {
+					bodySpacing: 4,
+					mode:"nearest",
+					intersect: 0,
+					position:"nearest",
+					xPadding:10,
+					yPadding:10,
+					caretPadding:10,
+					callbacks: {
+						label: function(tooltipItem, data) {
+							var text =  ( Number((tooltipItem.yLabel).toFixed(2)).toLocaleString("en-US"))
+						return text;
+						}
+					}
+				},
+				scales: {
+					yAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: ''
+					},
+					stacked: true,
+					ticks: {
+						callback:function(value , index) {
+							return value.toLocaleString("en-US")
+						}
+					}
+					}],
+					xAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: 'Day'
+					}
+					}]
+				},
+				layout:{
+					padding:{left:15,right:15,top:15,bottom:15}
+				}
+			}
+		});
+	</script>
+{% endblock javascripts %}

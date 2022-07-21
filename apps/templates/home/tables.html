@@ -1,0 +1,103 @@
+<table id="data-tables" class="table table-bordered table-head-bg-info table-bordered-bd-info mt-4" style="width: 100%">
+
+    <thead >
+      <tr>
+        <th scope="col">Actual</th>
+        <th scope="col" class="channel-value">{{defaultChanellName}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>Actual Roi</th>
+        <td class="roi-values">$ {{rois}}</td>
+      </tr>
+      <tr>
+        <th>Total Spend</th>
+        <td class="total-spend-values">$ {{totalSpend}}</td>
+      </tr>
+      <tr>
+        <th>Total Return</th>
+        <td class="total-return-values">$ {{totalReturn}}</td>
+      </tr>
+      <tr>
+        <th>Avg Weekly Spend</th>
+        <td class="avg-spend-values">$ {{avgSpentWeeks}}</td>
+      </tr>
+      <tr>
+        <th>Avg Weekly Return</th>
+        <td class="avg-returns-values">$ {{avgReturnsWeeks}}</td>
+      </tr>
+      <tr>
+        <th>Weeks with Spend</th>
+        <td class="roi-values">{{WeeksWithSpend}}</td>
+      </tr>
+    </tbody>
+
+    <thead >
+      <tr>
+        <th scope="col">Selected</th>
+        <th scope="col">{{defaultChanellName}}</th>
+      </tr>
+
+      </thead>
+      <tbody>
+      <tr>
+        <th>Selected Roi</th>
+        <th>$ {{selectedRoiSel}}</th>
+      </tr>
+      <tr>
+        
+        <th>Total Spend</th>
+        <th>$ {{totalSpendSel}}</th>
+      </tr>
+      <tr>  
+        <th>Total Return</th>
+        <th>$ {{totalReturnSel}}</th>
+      </tr>
+      <tr>
+        <th>Avg Weekly Spend</th>
+        <td>
+            <div class="input-icon">
+              <input
+                autocomplete="off"
+                style="width: 100%"
+                id="{{table_input_id}}"
+                name="inputValue"
+                type="number"
+                class="form-control roas-input"
+                value="{{default_roas_value}}"
+                class="form-control"
+              />
+            </form>
+              <i>$</i>
+            </div>
+        </td>
+      </tr>
+      <tr>
+        <td>Avg Weekly Return</td>
+        <td>
+          $ {{avgRevSel}}
+        </td>
+      </tr>
+    </tbody>
+    <thead >
+      <tr>
+        <th scope="col">Difference (Actual - Selected)</th>
+        <th scope="col" class="channel-value">{{defaultChanellName}}</th>
+      </tr>
+    </thead>
+  <tbody>
+    <tr>
+      <th>Spend</th>
+      <th>$ {{DifSpend}}</th>
+    </tr>
+    <tr>
+      <th>Return</th>
+      <th>$ {{DifReturn}}</th>
+    </tr>
+    <tr>
+      <th>Trade-off ROI</th>
+      <th>$ {{ToffRoi}}</th>
+    </tr>
+  </tbody> 
+  </table>

@@ -1,0 +1,214 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Dashboard {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+			
+	<div class="content">
+		<div class="panel-header bg-primary-gradient">
+			<div class="page-inner py-5">
+				<div class="d-flex align-items-left align-items-md-center flex-column flex-md-row">
+					<div>
+						<div class="avatar avatar-xl"> 
+							<img
+							src="{{ url_for('user_managament_blueprint.serve_client_logo', user_id=userid)}}"
+							alt="..."
+							class="avatar-img rounded-circle"
+							/>
+						  </div>
+						<h2 class="text-white pb-2 fw-bold">Model Validation</h2>
+						<!-- <h5 class="text-white op-7 mb-2">Free Bootstrap 4 Admin Dashboard</h5> -->
+					</div>
+					
+				</div>
+			</div>
+		</div>
+		<div class="page-inner mt--5">
+			<div class="row mt--2">
+				
+				<div class="col-md-10 card">
+					<div class="card-header">
+						<div class="card-title">Time Series Holdout Validation Plot</div>
+					</div>
+					<div class="card-body">
+						<div class="chart-container">
+							<canvas id="multipleLineChart"></canvas>
+						</div>
+					</div>
+				</div>
+			
+				<div class="col-md-2">
+					<div class="card card-stats card-primary card-round", style = "width: 100%">
+						<div class="card-body">
+							<div class="row">
+								<div class="col-5">
+									<div class="icon-big text-center">
+										<i class="flaticon-users"></i>
+									</div>
+								</div>
+								<div class="col-7 col-stats">
+									<div class="numbers">
+										<p class="card-category">Train Error</p>
+										<h4 class="card-title">7.6%</h4>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="card card-stats card-info card-round", style = "width: 100%">
+						<div class="card-body">
+							<div class="row">
+								<div class="col-5">
+									<div class="icon-big text-center">
+										<i class="flaticon-interface-6"></i>
+									</div>
+								</div>
+								<div class="col-7 col-stats">
+									<div class="numbers">
+										<p class="card-category">Test Error</p>
+										<h4 class="card-title">9.3%</h4>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="row mt--2">
+				
+				{% for item in ClientimageID%}
+			
+					<div class="col-md-12 card">
+						
+						<div class="card-body">
+							<h3>{{item.filename}}</h3>
+							<img
+							src="{{ url_for('user_managament_blueprint.serve_client_img_data', id=item.id)}}"
+							alt="..."
+							/>
+						</div>
+					</div>
+			
+					
+				{% endfor %}				
+			</div>
+		</div>
+	</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+	<!-- Atlantis DEMO methods, don't include it in your project! -->
+	<script src="/static/assets/js/setting-demo.js"></script>
+	<script src="/static/assets/js/demo.js"></script>
+	
+	<script>		
+		multipleLineChart = document.getElementById('multipleLineChart').getContext('2d')
+		var myMultipleLineChart = new Chart(multipleLineChart, {
+			type: 'line',
+			data: {
+				labels: {{labels2|safe}},
+				datasets: [{
+					label: "{{first|safe}}",
+					borderColor: "#1d7af3",
+					pointBorderColor: "#FFF",
+					pointBackgroundColor: "#1d7af3",
+					pointBorderWidth: 2,
+					pointHoverRadius: 4,
+					pointHoverBorderWidth: 1,
+					pointRadius: 0,
+					backgroundColor: 'transparent',
+					fill: true,
+					borderWidth: 2,
+					data: {{predRevTrain|safe}},
+				},{
+					label: "{{second|safe}}",
+					borderColor: "#59d05d",
+					pointBorderColor: "#FFF",
+					pointBackgroundColor: "#59d05d",
+					pointBorderWidth: 2,
+					pointHoverRadius: 4,
+					pointHoverBorderWidth: 1,
+					pointRadius: 0,
+					backgroundColor: 'transparent',
+					fill: true,
+					borderWidth: 2,
+					data: {{actualRev|safe}}
+				}, {
+					label: "{{third|safe}}",
+					borderColor: "#f3545d",
+					pointBorderColor: "#FFF",
+					pointBackgroundColor: "#f3545d",
+					pointBorderWidth: 2,
+					pointHoverRadius: 4,
+					pointHoverBorderWidth: 1,
+					pointRadius: 0,
+					backgroundColor: 'transparent',
+					fill: true,
+					borderWidth: 2,
+					data: {{predRevTest|safe}}
+				}]
+			},
+			options : {
+				responsive: true, 
+				maintainAspectRatio: false,
+				legend: {
+					position: 'top',
+				},
+				tooltips: {
+					bodySpacing: 4,
+					mode:"nearest",
+					intersect: 0,
+					position:"nearest",
+					xPadding:10,
+					yPadding:10,
+					caretPadding:10,
+					callbacks: {
+						label: function(tooltipItem, data) {
+							var text =  ( Number((tooltipItem.yLabel).toFixed(2)).toLocaleString("en-US"))
+						return text;
+						}
+					}
+				},
+				scales: {
+					// xAxes: [{
+					// 	ticks: {
+					// 		callback:function(value , index) {
+					// 			var xs ='';
+					// 			if(value/1000 > 0) {
+					// 				xs = '$'+value/1000+'K'
+					// 			}else{
+					// 				xs ='-$'+value/1000*(-1)+'K'
+					// 			}
+					// 			return xs;
+					// 		}
+					// 	}
+					// }],
+					yAxes: [{
+						scaleLabel: {
+							display: true,
+							labelString: 'Revenue'
+						},
+						ticks: {
+							callback:function(value , index) {
+								return value.toLocaleString("en-US")
+							}
+						}
+					}],
+				},
+				layout:{
+					padding:{left:15,right:15,top:15,bottom:15}
+				}
+			}
+		});
+
+	
+	</script>
+
+{% endblock javascripts %}

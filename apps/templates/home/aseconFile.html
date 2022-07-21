@@ -1,0 +1,255 @@
+
+{% extends "layouts/base.html" %}
+
+{% block title %} Media Optimization {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+<div class="content">
+  <div class="page-inner"> 
+    <div class="content-body">
+      <div class="row"> 
+        <!-- Tab lists  -->
+        <ul class="nav nav-pills mb-3" id="analysis-tab" role="tablist">
+          {% for channel, tab_id, target in zip(channels, tab_ids, section_targets)
+          %}
+          <li class="nav-item" role="presentation">
+            <button
+              class="nav-link {{'active' if active_tab == tab_id }}"
+              id="{{tab_id}}"
+              data-toggle="tab"
+              data-target="{{target}}"
+              type="button"
+              aria-controls="{{channel}}"
+              aria-selected="true"
+            >
+              {{channel}}
+            </button>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+        <div class="container-fluid">
+          <div class="page-titles">
+            <h3>Options</h3>
+          </div>
+          <div class="row">
+            <div class="col-6">
+              <div class="card">
+                <div class="card-header">
+                  <h4 class="card-title">Choose Dates</h4>
+                </div>
+      
+                <div class="card-body">
+                  {% include "home/controls.html" %}
+                  <!-- Tables values -->
+                  <div>
+                    <div class="row" style="padding: 5px; display: table">
+                      {% include "home/tables.html" %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6"> 
+              <div class="card"> 
+                <div class="card-header"> 
+                  <div class="card-title">
+                    Line Chart
+                  </div> 
+                </div> 
+                <div class="card-body">
+                  <div class="chart-container">
+                    <div class="chartjs-size-monitor" style="position: absolute; inset: 0px; overflow: hidden; pointer-events: none; visibility: hidden; z-index: -1;">
+                      <div class="chartjs-size-monitor-expand" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;">
+                        <div style="position:absolute;width:1000000px;height:1000000px;left:0;top:0">
+                        </div>
+                      </div>
+                      <div class="chartjs-size-monitor-shrink" style="position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1;">
+                        <div style="position:absolute;width:200%;height:200%;left:0; top:0">
+                        </div>
+                      </div>
+                    </div> 
+                    <canvas id="lineChart" style="display: block; height: 300px; width: 327px;" width="294" height="269" class="chartjs-render-monitor">
+                    </canvas>
+                  </div>
+                </div> 
+              </div>
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Start of Plotly Graphs  -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <!-- Atlantis DEMO methods, don't include it in your project! -->
+  <script src="/static/assets/js/setting-demo.js"></script>
+  <script src="/static/assets/js/demo.js"></script>
+
+  <script>
+    multipleLineChart = document.getElementById('lineChart').getContext('2d')
+		var myMultipleLineChart = new Chart(multipleLineChart, {
+			type: 'line',
+			data: {
+				labels: {{WeeklySpend|safe}},
+				datasets: [{
+					label: "{{first|safe}}",
+					borderColor: "#1d7af3",
+					pointBorderColor: "#FFF",
+					pointBackgroundColor: "#1d7af3",
+					pointBorderWidth: 2,
+					pointHoverRadius: 4,
+					pointHoverBorderWidth: 1,
+					pointRadius: 0,
+					backgroundColor: 'transparent',
+					fill: true,
+					borderWidth: 2,
+					data: {{Revenue|safe}}
+				},{
+					label: "{{second|safe}}",
+					borderColor: "#59d05d",
+					pointBorderColor: "#FFF",
+					pointBackgroundColor: "#59d05d",
+					pointBorderWidth: 2,
+					pointHoverRadius: 4,
+					pointHoverBorderWidth: 1,
+					pointRadius: 0,
+					backgroundColor: 'transparent',
+					fill: true,
+					borderWidth: 2,
+					data: []
+				}, {
+					label: "{{third|safe}}",
+					borderColor: "#f3545d",
+					pointBorderColor: "#FFF",
+					pointBackgroundColor: "#f3545d",
+					pointBorderWidth: 2,
+					pointHoverRadius: 4,
+					pointHoverBorderWidth: 1,
+					pointRadius: 0,
+					backgroundColor: 'transparent',
+					fill: true,
+					borderWidth: 2,
+					data: []
+				}]
+			},
+			options : {
+				responsive: true, 
+				maintainAspectRatio: false,
+				legend: {
+					position: 'top',
+				},
+				tooltips: {
+					bodySpacing: 4,
+					mode:"nearest",
+					intersect: 0,
+					position:"nearest",
+					xPadding:10,
+					yPadding:10,
+					caretPadding:10
+				},
+				layout:{
+					padding:{left:15,right:15,top:15,bottom:15}
+				}
+			}
+		});
+
+
+  </script>
+
+<script>
+  // table_input_ids = {{table_ids | safe}}
+  const roas_inputs = document.querySelectorAll(".roas-input");
+  const range_dates = document.querySelectorAll(".range-date");
+
+  const payload = {};
+  roas_inputs.forEach((el) => {
+    payload[el.id] = el.value;
+    el.addEventListener("change", (e) => {
+      payload[e.target.id] = e.target.value;
+      sendDates(payload);
+    });
+  });
+
+  range_dates.forEach((el) => {
+    el.addEventListener("blur", (e) => {
+      sendDates(payload);
+    });
+  });
+
+  //API function
+  function sendDates(_payload) {
+    //Get a reference to input elements
+    const start_date = document.getElementById("start-date").value;
+    const end_date = document.getElementById("end-date").value;
+
+    if (start_date >= end_date) {
+      //alert("Start date cannot be greater than the end date");
+      $("#date-error").modal("show");
+      return false;
+    }
+
+    $("#preloader").show();
+
+    $.ajax({
+      url: "/index/media-optimization?user={{user.username}}",
+      type: "GET",
+      data: {
+        start_date: start_date,
+        end_date: end_date,
+        ..._payload,
+        content_type: "json",
+      },
+    }).then(function (response) {
+      // ROI values
+      roi_vals = $(".roi-values");
+      for (var i = 0; i < response.rois.length; i++) {
+        roi_vals[i].innerText = "$ " + response.rois[i];
+      }
+      // Overspend
+      overspend_vals = $(".overspend-values");
+      for (var i = 0; i < response.overspends.length; i++) {
+        overspend_vals[i].innerText = "$ " + response.overspends[i];
+      }
+
+      // Overspend revenue
+      overspend_rev = $(".overspend-rev-values");
+      for (var i = 0; i < response.overspen_revenues.length; i++) {
+        overspend_rev[i].innerText = "$ " + response.overspen_revenues[i];
+      }
+
+      // ROI overspend
+      roi_overspend_vals = $(".roi-overspend-values");
+      for (var i = 0; i < response.roi_overspends.length; i++) {
+        roi_overspend_vals[i].innerText = "$ " + response.roi_overspends[i];
+      }
+
+      console.log("values sent");
+      $("#preloader").hide();
+    });
+  }
+
+  //Attach listeners to the onchange event
+  //start_date.onchange = sendDates;
+  //end_date.onchange = sendDates;
+
+  //for (var i = 0; i < passed_inputs.length; i++) {
+  //  document.getElementById(passed_inputs[i].id).onchange = sendDates;
+  //}
+
+  //fb.onchange = sendDates;
+  //display.onchange = sendDates;
+  //google.onchange = sendDates;
+  //microsoft.onchange = sendDates;
+
+  //sendDates();
+</script>
+{% endblock javascripts %}

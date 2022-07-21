@@ -1,0 +1,226 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Register {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+<style>
+  a:focus{
+    color: white !important;
+  }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+
+
+<!-- <br><br><br><br><br><br><br><br><br><br> -->
+
+  <div class="panel-header bg-primary-gradient">
+    <div class="page-inner py-5">
+      <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row">
+        <div>
+          <div class="avatar avatar-xl"> 
+            </div>
+          <h2 class="text-white pb-2 fw-bold">User Management</h2>
+        </div>
+        <div class="ml-md-auto py-2 py-md-0">
+          <a class="btn btn-secondary btn-round"
+        href="javascript:void(0)"
+        data-toggle="modal"
+        data-target="#create-new-user"
+        >+ Add New User</a
+      >
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="page-inner">
+  <div class="container-fluid">
+    <!-- Add User -->
+    <div class="modal fade" id="create-new-user">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Add User</h5>
+            <button type="button" class="close" data-dismiss="modal">
+              <span>&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form
+              _lpchecked="1"
+              method="POST"
+              enctype="multipart/form-data"
+              action="/admin/register"
+            >
+              <div class="form-group">
+                <!-- Username -->
+                <label class="text-black font-w500"
+                  >Brand Name (Something Unique)</label
+                >
+                <input
+                  autocomplete="off"
+                  type="text"
+                  class="form-control"
+                  id="username"
+                  name="username"
+                  placeholder="Username or Company Name"
+                />
+              </div>
+              <div class="form-group">
+                <!-- Email -->
+                <label class="text-black font-w500"
+                  >Email</label
+                >
+                <input
+                  autocomplete="off"
+                  type="text"
+                  class="form-control"
+                  id="email"
+                  name="email"
+                  placeholder="Email or Company Email"
+                />
+              </div>
+
+              <!-- Password -->
+              <div class="form-group">
+                <label class="text-black font-w500">User Password</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="password"
+                  name="password"
+                  placeholder="Password"
+                />
+              </div>
+
+              <br />
+              <!-- User Brand Logo -->
+              <div class="form-group">
+                <label class="text-black font-w500">User Logo</label>
+                <input
+                  id="client-logo"
+                  name="client-logo"
+                  type="file"
+                  accept="image/*"
+                  title="Only images are allowed"
+                  required
+                />
+              </div>
+
+              <br />
+              <!-- User Analytics Data -->
+              <div class="form-group">
+                <label class="text-black font-w500"
+                  >User Dashboard Analytics Data</label
+                >
+                <input
+                  id="data"
+                  name="data"
+                  type="file"
+                  title="Only CSV and Excel files are allowed"
+                  accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                  required
+                />
+              </div>
+              <!-- User Analytics Image Data -->
+              <div class="form-group">
+                <label class="text-black font-w500"
+                  >User Dashboard Analytics Images</label
+                >
+                <input
+                  multiple
+                  id="imgdata"
+                  name="imgdata[]"
+                  type="file"
+                  title="Only jpg and png files are allowed"
+                  accept=".jpg, .png, jpeg"
+                  required
+                />
+              </div>
+              <!-- Submit button -->
+              <div class="form-group">
+                <input
+                  style="background-color: #2296bc"
+                  type="submit"
+                  class="btn btn-primary"
+                  value="Create User"
+                />
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- <div class="row">
+      <a class="btn btn-secondary btn-round"
+        href="javascript:void(0)"
+        style="background-color: #2296bc"
+        class="add-menu-sidebar"
+        data-toggle="modal"
+        data-target="#create-new-user"
+        >+ Add New User</a
+      >
+    </div> -->
+  </div>
+  <div class="row">
+    <!-- If there are users in the database - loop through them -->
+    {% if has_users %}
+    <!-- loop through them -->
+    {% for user in users.items %}
+    <!-- Start of each user -->
+    {% if user.is_admin == False %}
+
+    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6">
+      
+      <div class="card card-profile"> 
+        
+        <div class="card-header" style="background-image: url('/static/assets/img/blogpost.jpg')"> 
+          <div class="profile-picture"> 
+            <div class="avatar avatar-xl"> 
+              <img
+              src="{{ url_for('user_managament_blueprint.serve_client_logo', user_id=user.id)}}"
+              alt="..."
+              class="avatar-img rounded-circle"
+              />
+            </div> 
+          </div> 
+        </div> 
+        <div class="card-body"> 
+          <div class="user-profile text-center"> 
+            <div class="name">
+              {{user.username}}
+            </div> 
+              <div class="view-dashboard">
+                <a href="/validation?user={{user.username}}" class="btn btn-secondary btn-block">View Dashboard</a> 
+                <!-- <a href="/validation?user={{user.username}}" class="btn btn-secondary btn-block">Model Validation</a> 
+                <a href="/output?user={{user.username}}" class="btn btn-secondary btn-block">Model Output</a>  -->
+                </div>
+                <br>
+                <div class="view-profile">
+                  <a href="/profile?user={{user.username}}" class="btn btn-secondary btn-block">View Full Profile</a> 
+                </div> 
+              </div> 
+            </div>
+          </div>
+        </div>
+        {% endif %} {% endfor %} 
+      </div>
+      
+    </div>
+    <!-- end If  -->
+    
+
+    {% else %}
+          <h1 style="color: white">No users found</h1>
+    {% endif %} 
+  </div>
+
+</div>
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

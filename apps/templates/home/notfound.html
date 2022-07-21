@@ -1,0 +1,45 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Dashboard {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+			
+	<div class="content">
+		<div class="panel-header bg-primary-gradient">
+			<div class="page-inner py-5">
+				<div class="d-flex align-items-left align-items-md-center flex-column flex-md-row">
+					<div>
+						<div class="profile-picture"> 
+							<div class="avatar avatar-xl"> 
+							  <img
+							  src="{{ url_for('user_managament_blueprint.serve_client_logo', user_id=userid)}}"
+							  alt="..."
+							  class="avatar-img rounded-circle"
+							  />
+							</div> 
+						  </div> 
+						<h2 class="text-white pb-2 fw-bold">{{ErrorMsg}}</h2>
+						
+						<input type="hidden" name="s" id="userid" value="{{userid}}">
+						<input type="hidden" name="s" id="username" value="{{username}}">
+					</div>
+					<div class="ml-md-auto py-2 py-md-0">
+						<a href="#" class="btn btn-white btn-border btn-round mr-2">Manage</a>
+						<a href="#" class="btn btn-secondary btn-round">+ Add new user</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+	
+
+{% endblock javascripts %}

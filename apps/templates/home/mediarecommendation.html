@@ -1,0 +1,908 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Dashboard {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+			
+	<div class="content">
+		<div class="panel-header bg-primary-gradient">
+			<div class="page-inner py-5">
+				<div class="d-flex align-items-left align-items-md-center flex-column flex-md-row">
+					<div>
+						<div class="profile-picture"> 
+							<div class="avatar avatar-xl"> 
+							  <img
+							  src="{{ url_for('user_managament_blueprint.serve_client_logo', user_id=userid)}}"
+							  alt="..."
+							  class="avatar-img rounded-circle"
+							  />
+							</div> 
+						  </div> 
+						<h2 class="text-white pb-2 fw-bold">Media Plan : Recommendations</h2>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+		
+			
+		<div class="page-inner mt--5">
+			<div class="row mt--2">
+				<div class="col-md-12"> 
+					<div class="card"> 
+					  <div class="card-header"> 
+						<div class="card-title">
+							Media Plan : Recommendations	 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+							<button type="button" name="channel"  class="btn btn-outline-primary  btn-sm active" id="MedbaseSenario" onclick="MediaRecommendations('Base')">Base Scenario</button><button type="button" name="channel" id="MedroasOptimize"  class="btn btn-outline-primary  btn-sm"  onclick="MediaRecommendations('Roas')">ROAS Optimized</button>					
+						</div> 
+					  </div> 
+					  <div class="card-body">
+						<div class="row" id="BaseSenario">
+							<div class="px-1" style="border-right: 2px solid;max-width: 182px;">
+								{% for item in MediaHeaderTitle%}
+								<div class="d-flex w-100 px-2 py-2 justify-content-center"><div class="btn-group " style="border-bottom: 2px solid white;padding-bottom: 4px;"><button type="button" class="btn btn-link  btn-md" style="width:182px;height: 50px;">{{item}}</button></div></div>
+								{% endfor %}
+							</div>
+							<div class="col-md-10" style="overflow: auto;">
+								{% for k,v in Recommendation_List.items() %}
+									<div class="d-flex w-100 px-2 py-2">
+										<div class="btn-group " style="border-bottom: 2px solid;padding-bottom: 4px;border-color: {{ChannelColorArr[(k.replace('spend_','')).replace('_','')]}}">
+											{% for item in v.Base%}
+												{% if 'macro_notable_' in k %}
+													{% if item == 1 %}												
+														<button type="button" class="btn btn-primary btn-md" style="width:105px;height: 50px;"></button>
+													{% else %}
+														<button type="button" class="btn btn-outline-warning btn-md" style="width:105px;height: 50px;"></button>
+													{% endif %}	
+												{% else %}
+													<button type="button" class="btn btn-outline-default btn-md" style="width:105px;height: 50px;border: 2px solid;border-color: {{ChannelColorArr[(k.replace('spend_','')).replace('_','')]}}">{{item}}</button>
+												{% endif %}		
+												
+											{% endfor %}
+										</div>
+									</div>
+								{% endfor %}
+							</div>											
+						</div>
+						<div class="row d-none" id="RoasSenario">
+							<div class="col-md-2 px-1" style="border-right: 2px solid;max-width: 182px;">
+								{% for item in MediaHeaderTitle%}
+								<div class="d-flex w-100 px-2 py-2 justify-content-center" ><div class="btn-group " style="border-bottom: 2px solid white;padding-bottom: 4px;"><button type="button" class="btn btn-link  btn-md" style="width:200px;height: 50px;">{{item}}</button></div></div>
+								{% endfor %}
+							</div>
+							<div class="col-md-10" style="overflow: auto;">
+								{% for k,v in Recommendation_List.items() %}
+									<div class="d-flex w-100 px-2 py-2">
+										<div class="btn-group " style="border-bottom: 2px solid;padding-bottom: 4px;border-color: {{ChannelColorArr[(k.replace('spend_','')).replace('_','')]}}">
+											{% for item in v.Roas%}
+												{% if 'macro_notable_' in k %}
+													{% if item == 1 %}												
+														<button type="button" class="btn btn-primary btn-md" style="width:105px;height: 50px;"></button>
+													{% else %}
+														<button type="button" class="btn btn-outline-warning btn-md" style="width:105px;height: 50px;"></button>
+													{% endif %}	
+												{% else %}
+													<button type="button" class="btn btn-outline-primary-default btn-md" style="width:105px;height: 50px;border:2px solid;border-color: {{ChannelColorArr[(k.replace('spend_','')).replace('_','')]}}">{{item}}</button>
+												{% endif %}		
+												
+											{% endfor %}
+										</div>
+									</div>
+								{% endfor %}
+							</div>								
+						</div>
+					  </div> 
+					</div>
+				  </div>
+			</div>
+			<div class="row mt--2">
+				<div class="col-md-12"> 
+					<div class="card"> 
+					  <div class="card-header"> 
+						<div class="card-title">							
+							<button type="button" name="channel" id="SpendButton"  class="btn btn-outline-primary  btn-sm active"  style="width:100px;height: 30px;" onclick="ScenarioComparison('Spend')">Spend</button>
+							<button type="button" name="channel" id="RevenueButton"   class="btn btn-outline-primary  btn-sm"  style="width:100px;height: 30px;" onclick="ScenarioComparison('Revenue')">Revenue</button>	
+							<button type="button" name="channel" id="ROASButton"   class="btn btn-outline-primary  btn-sm"  style="width:100px;height: 30px;" onclick="ScenarioComparison('ROAS')">ROAS</button><br><br>
+							<div id="comparisontitle"></div>
+						</div> 
+					  </div> 
+					  <div class="card-body">
+						<div class="row">
+							<div class="col-md-4 text-center">Base Scenario
+								<div class="chart-container">
+									<canvas id="scenarioComparisonBase" ></canvas>
+								</div>
+								<div id="spendtotal"   style="font-weight: 900;"></div>
+							</div>
+							<div class="col-md-4 text-center">ROAS Optimized
+								<div class="chart-container" >
+									<canvas id="scenarioComparisonRoas" style="width:95%;right:15%;"></canvas>
+								</div>
+								<div id="revenuetotal"   style="font-weight: 900;"></div>
+							</div>
+							<div class="col-md-4 text-center">ROAS Optimized Difference
+								<div class="chart-container">
+									<canvas id="scenarioComparisonDiff" ></canvas>
+								</div>
+								<div id="difftotal" style="font-weight: 900;"></div><br>
+								<div class="d-flex justify-content-center"  style="font-weight: 900;"><div>Percentage Change : </div>&nbsp;<div  id="Percentage"></div></div>
+							</div>							
+						</div>
+					  </div> 
+					</div>
+				  </div>
+			</div>
+			<div class="row mt--2">
+				<div class="col-md-6"> 
+					<div class="card"> 
+					  <div class="card-header"> 
+						<div class="card-title">
+							Scenario Revenue Projection
+							<input type="hidden" name="s" id="userid" value="{{userid}}">
+						</div> 
+					  </div> 
+					  <div class="card-body">
+						<div class="chart-container">
+						  <canvas id="lineChart" ></canvas>
+						</div>
+					  </div> 
+					</div>
+				  </div>
+				  <div class="col-md-6">
+					<div class="card">
+						<div class="card-header">
+							<div class="card-title">Scenario Contribution Plots &nbsp;&nbsp;&nbsp;&nbsp;
+								<button type="button" name="channel"  class="btn btn-outline-primary  btn-sm" id="baseSenario" onclick="ScenarioContribution('Base Scenario')">Base Scenario</button><button type="button" name="channel" id="roasOptimize"  class="btn btn-outline-primary  btn-sm"  onclick="ScenarioContribution('ROAS Optimized')">ROAS Optimized</button>
+							</div>
+						</div>
+						<div class="card-body">
+							<div class="chart-container">
+								<canvas id="htmlLegendsChart"></canvas>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+	<!-- Atlantis DEMO methods, don't include it in your project! -->
+	<script src="/static/assets/js/setting-demo.js"></script>
+	<script src="/static/assets/js/demo.js"></script>
+	
+	<script>
+		var ChannelColorArr = {{ChannelColorArr|safe}}
+		ScenarioComparison('Spend')
+		function ScenarioComparison(val) {
+			if(val == 'Spend') {
+				$("#SpendButton").addClass('active')
+				$("#RevenueButton").removeClass('active')
+				$("#ROASButton").removeClass('active')
+				document.getElementById("comparisontitle").innerHTML = 'Scenario Comparison : Spend'
+			}else if(val == 'Revenue') {
+				$("#SpendButton").removeClass('active')
+				$("#RevenueButton").addClass('active')
+				$("#ROASButton").removeClass('active')
+				document.getElementById("comparisontitle").innerHTML = 'Scenario Comparison : Revenue'
+			}else{
+				$("#SpendButton").removeClass('active')
+				$("#RevenueButton").removeClass('active')
+				$("#ROASButton").addClass('active')
+				document.getElementById("comparisontitle").innerHTML = 'Scenario Comparison : Return on Ad Spend'
+			}
+			$.ajax({
+				url: "/index/scenariocomparison",
+				type: "POST",
+				data: {
+					filter: val,
+					user_id:$('#userid').val(),
+					content_type: "json",
+				},
+				}).then(function (response) {
+					console.log('-- api comparison ---');
+					console.log(response);
+					// Scenario  Comparison
+					
+					if(document.getElementById("comparisontitle").innerHTML == 'Scenario Comparison : Spend'){
+						document.getElementById("Percentage").innerHTML = response.TotalPecentage[0].toLocaleString("en-US") + '%'
+						if(response.TotalPecentage[0] > 0) {
+							document.getElementById("Percentage").style.color = 'green'
+						}else{
+							document.getElementById("Percentage").style.color = 'red'
+						}
+						
+					}else if(document.getElementById("comparisontitle").innerHTML == 'Scenario Comparison : Revenue') {
+						document.getElementById("Percentage").innerHTML = response.TotalPecentage[1].toLocaleString("en-US") + '%'
+						if(response.TotalPecentage[1] > 0) {
+							document.getElementById("Percentage").style.color = 'green'
+						}else{
+							document.getElementById("Percentage").style.color = 'red'
+						}
+					}else{
+						document.getElementById("Percentage").innerHTML = response.TotalPecentage[2].toLocaleString("en-US") + '%'
+						if(response.TotalPecentage[2] > 0) {
+							document.getElementById("Percentage").style.color = 'green'
+						}else{
+							document.getElementById("Percentage").style.color = 'red'
+						}
+					}
+					var spendtotal = '';
+					var revenuetotal = '';
+					var difftotal = '';
+					if(response.BaseScenarioComparison.reduce((partialSum, a) => partialSum + a, 0) > 0) {
+						spendtotal = 'Total : '+'$'+Math.round(response.BaseScenarioComparison.reduce((partialSum, a) => partialSum + a, 0)).toLocaleString("en-US") ;					
+					}else{
+						spendtotal = 'Total : '+'-$'+Math.round(Math.abs(response.BaseScenarioComparison.reduce((partialSum, a) => partialSum + a, 0))).toLocaleString("en-US") ;
+					}
+
+					if(response.ROASOptimizedComparison.reduce((partialSum, a) => partialSum + a, 0) > 0) {
+						revenuetotal = 'Total : '+'$'+Math.round(response.ROASOptimizedComparison.reduce((partialSum, a) => partialSum + a, 0)).toLocaleString("en-US");					
+					}else{
+						revenuetotal = 'Total : '+'-$'+Math.round(Math.abs(response.ROASOptimizedComparison.reduce((partialSum, a) => partialSum + a, 0))).toLocaleString("en-US");
+					}
+
+					if(response.DifferentComparison.reduce((partialSum, a) => partialSum + a, 0) > 0) {
+						difftotal = 'Total : '+'$'+Math.round(response.DifferentComparison.reduce((partialSum, a) => partialSum + a, 0)).toLocaleString("en-US");						
+					}else{
+						difftotal = 'Total : '+'-'+'$'+Math.round(Math.abs(response.DifferentComparison.reduce((partialSum, a) => partialSum + a, 0))).toLocaleString("en-US");
+					}
+					if(val == 'ROAS'){
+						spendtotal = spendtotal.replace('$','')
+						revenuetotal = revenuetotal.replace('$','')
+						difftotal = difftotal.replace('$','')
+					}
+					document.getElementById("spendtotal").innerHTML = spendtotal
+					document.getElementById("revenuetotal").innerHTML = revenuetotal
+					document.getElementById("difftotal").innerHTML = difftotal
+					scenarioComparisonBaseChart = document.getElementById('scenarioComparisonBase').getContext('2d')
+					borderColorArr = [];
+					for (var i=0;i<response.ScenarioComparisonlabel.length;i++) {
+						borderColorArr[i] = ChannelColorArr[response.ScenarioComparisonlabel[i]]
+					}
+					var myscenarioComparisonBaseChart = new Chart(scenarioComparisonBaseChart, {
+						type: 'horizontalBar',
+						data: {
+							labels: response.ScenarioComparisonlabel,
+							datasets: [{
+								label: "Predicted Revenue (Base Scenario)",
+								borderColor: borderColorArr,
+								pointBorderColor: "#FFF",
+								pointBackgroundColor: "#1d7af3",
+								pointBorderWidth: 2,
+								pointHoverRadius: 4,
+								pointHoverBorderWidth: 1,
+								pointRadius: 0,
+								backgroundColor: 'transparent',
+								fill: true,
+								borderWidth: 2,
+								data: response.BaseScenarioComparison
+							}]
+						},
+						options : {
+							responsive: true, 
+							maintainAspectRatio: false,
+							indexAxis: 'y',
+								// Elements options apply to all of the options unless overridden in a dataset
+								// In this case, we are setting the border of each horizontal bar to be 2px wide
+								elements: {
+								bar: {
+									borderWidth: 2,
+								}
+							},
+							animation: {
+								duration: 500,
+								easing: "easeOutQuart",
+								onComplete: function () {
+									var ctx = this.chart.ctx;
+									ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontFamily, 'normal', Chart.defaults.global.defaultFontFamily);
+									ctx.textAlign = 'bottom';
+									ctx.textBaseline = 'bottom';
+									this.data.datasets.forEach(function (dataset) {
+										for (var i = 0; i < dataset.data.length; i++) {
+											var model = dataset._meta[Object.keys(dataset._meta)[0]].data[i]._model;
+											scale_max = dataset._meta[Object.keys(dataset._meta)[0]].data[i]._yScale.maxHeight;
+											ctx.fillStyle = '#444';
+											var y_pos = model.y;
+											var cusdata = ''
+											var x_pos = model.x+3;
+											if(val == 'ROAS'){
+												if(dataset.data[i]  > 0){
+													cusdata = (dataset.data[i]).toFixed(2)
+													if(Math.max(...dataset.data) == dataset.data[i]){
+															x_pos = model.x-50
+													}
+												}else if(dataset.data[i] < 0){
+													cusdata = (dataset.data[i]).toFixed(2)
+												}
+											}else{
+												if (dataset.data[i]> 1000){
+													cusdata = '$'+Math.round(dataset.data[i]/1000)+'K'
+												if(`${Math.round(dataset.data[i]/1000)}`.length > 2){
+													if(Math.max(...dataset.data) == dataset.data[i]){
+														x_pos = model.x-45
+													}												
+													}
+												}else if(dataset.data[i] < 1000 && dataset.data[i] > 0){
+													cusdata = '$'+(dataset.data[i]).toFixed(2)
+													if(Math.max(...dataset.data) == dataset.data[i]){
+															x_pos = model.x-50
+													}
+												}else if(dataset.data[i] < 0){
+													if(Math.abs(dataset.data[i]) > 1000){
+														cusdata = '$'+Math.round(dataset.data[i]/1000)*(-1)+'K'
+													}else{
+														cusdata = '$'+Math.round(dataset.data[i])*(-1)
+													}
+												}
+											}
+											
+											ctx.fillText(cusdata, x_pos, y_pos+5);
+										}
+									});
+								}
+							},
+							legend: {
+								display:false,
+								position : 'bottom',
+								labels : {
+									fontColor: 'rgb(154, 154, 154)',
+									fontSize: 12,
+									usePointStyle : true,
+									padding: 20
+								}
+							},
+							tooltips: {
+								bodySpacing: 4,
+								mode:"nearest",
+								intersect: 0,
+								position:"nearest",
+								xPadding:10,
+								yPadding:10,
+								caretPadding:10,
+								callbacks: {
+									label: function(tooltipItem, data) {
+										var text =  ( Number((tooltipItem.xLabel).toFixed(2)).toLocaleString("en-US"))
+									return text;
+									}
+								}
+							},
+							scales: {
+								xAxes: [{
+									ticks: {
+										callback:function(value , index) {
+											if(val == 'ROAS') {
+												return value
+											}else{
+												return '$'+value/1000+'K'
+											}
+											
+										}
+									}
+								}],
+								// yAxes: [{
+								// 	ticks: {
+								// 		callback:function(value , index) {
+								// 			return value.slice(6)
+								// 		}
+								// 	}
+								// }],
+							},
+							
+							layout:{
+								padding:{left:15,right:15,top:15,bottom:15}
+							}
+						}
+					});
+
+					scenarioComparisonRoasChart = document.getElementById('scenarioComparisonRoas').getContext('2d')
+					var Roasvalue = response.ROASOptimizedComparison;
+					
+					var myscenarioComparisonRoasChart = new Chart(scenarioComparisonRoasChart, {
+						type: 'horizontalBar',
+						data: {
+							labels: response.ScenarioComparisonlabel,
+							datasets: [{
+								label: "Predicted Revenue (Base Scenario)",
+								borderColor: borderColorArr,
+								pointBorderColor: "#FFF",
+								pointBackgroundColor: "#1d7af3",
+								pointBorderWidth: 2,
+								pointHoverRadius: 4,
+								pointHoverBorderWidth: 1,
+								pointRadius: 0,
+								backgroundColor: 'transparent',
+								fill: true,
+								borderWidth: 2,
+								data: response.ROASOptimizedComparison
+							}]
+						},
+						options : {
+							responsive: true, 
+							maintainAspectRatio: false,
+							indexAxis: 'y',
+								// Elements options apply to all of the options unless overridden in a dataset
+								// In this case, we are setting the border of each horizontal bar to be 2px wide
+								elements: {
+								bar: {
+									borderWidth: 2,
+								}
+							},
+							plugins: {
+								legend: {
+									position: 'right',
+								},
+								title: {
+									display: false,
+									text: 'Chart.js Horizontal Bar Chart'
+								}
+							},
+							legend: {
+								display:false,
+								position : 'bottom',
+								labels : {
+									fontColor: 'rgb(154, 154, 154)',
+									fontSize: 12,
+									usePointStyle : true,
+									padding: 20
+								}
+							},
+							animation: {
+								duration: 500,
+								easing: "easeOutQuart",
+								onComplete: function () {
+									var ctx = this.chart.ctx;
+									ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontFamily, 'normal', Chart.defaults.global.defaultFontFamily);
+									ctx.textAlign = 'bottom';
+									ctx.textBaseline = 'bottom';
+
+									this.data.datasets.forEach(function (dataset) {
+										for (var i = 0; i < dataset.data.length; i++) {
+											var model = dataset._meta[Object.keys(dataset._meta)[0]].data[i]._model,
+												scale_max = dataset._meta[Object.keys(dataset._meta)[0]].data[i]._yScale.maxHeight;
+											ctx.fillStyle = '#444';
+											var y_pos = model.y;
+											var cusdata = ''
+											var x_pos = model.x+3;
+											if(val == 'ROAS'){
+												if(dataset.data[i]  > 0){
+													cusdata = (dataset.data[i]).toFixed(2)
+													if(Math.max(...dataset.data) == dataset.data[i]){
+															x_pos = model.x-50
+													}
+												}else if(dataset.data[i] < 0){
+													cusdata = (dataset.data[i]).toFixed(2)
+												}
+											}else{
+												if (dataset.data[i]> 1000){
+													cusdata = '$'+Math.round(dataset.data[i]/1000)+'K'
+												if(`${Math.round(dataset.data[i]/1000)}`.length > 2){
+													if(Math.max(...dataset.data) == dataset.data[i]){
+														x_pos = model.x-45
+													}												
+													}
+												}else if(dataset.data[i] < 1000 && dataset.data[i] > 0){
+													cusdata = '$'+(dataset.data[i]).toFixed(2)
+													if(Math.max(...dataset.data) == dataset.data[i]){
+															x_pos = model.x-50
+													}
+												}else if(dataset.data[i] < 0){
+													if(Math.abs(dataset.data[i]) > 1000){
+														cusdata = '$'+Math.round(dataset.data[i]/1000)*(-1)+'K'
+													}else{
+														cusdata = '$'+Math.round(dataset.data[i])*(-1)
+													}
+												}
+											}
+											ctx.fillText(cusdata, x_pos, y_pos+5);
+										}
+									});
+								}
+							},
+							scales: {
+								xAxes: [{
+									ticks: {
+										callback:function(value , index) {
+											if (val == 'ROAS') {
+												return value
+											}else{
+												return '$'+value/1000+'K'
+											}
+											
+										}
+									}
+								}],
+								yAxes: [{
+									ticks: {
+										callback:function(value , index) {
+											return ''
+										}
+									}
+								}],
+							},
+							tooltips: {
+								bodySpacing: 4,
+								mode:"nearest",
+								intersect: 0,
+								position:"nearest",
+								xPadding:10,
+								yPadding:10,
+								caretPadding:10,
+								callbacks: {
+									label: function(tooltipItem, data) {
+										var text =  ( Number((tooltipItem.xLabel).toFixed(2)).toLocaleString("en-US"))
+									return text;
+									}
+								}
+							},
+							layout:{
+								padding:{left:15,right:15,top:15,bottom:15}
+							}
+						}
+					});
+
+					scenarioComparisonDiffChart = document.getElementById('scenarioComparisonDiff').getContext('2d')
+					var myscenarioComparisonDiffChart = new Chart(scenarioComparisonDiffChart, {
+						type: 'horizontalBar',
+						data: {
+							labels: response.ScenarioComparisonlabel,
+							datasets: [{
+								label: "Predicted Revenue (Base Scenario)",
+								borderColor: borderColorArr,
+								pointBorderColor: "#FFF",
+								pointBackgroundColor: "#1d7af3",
+								pointBorderWidth: 2,
+								pointHoverRadius: 4,
+								pointHoverBorderWidth: 1,
+								pointRadius: 0,
+								backgroundColor: 'transparent',
+								fill: true,
+								borderWidth: 2,
+								data: response.DifferentComparison
+							}]
+						},
+						options : {
+							responsive: true, 
+							maintainAspectRatio: false,
+							indexAxis: 'y',
+								// Elements options apply to all of the options unless overridden in a dataset
+								// In this case, we are setting the border of each horizontal bar to be 2px wide
+								elements: {
+								bar: {
+									borderWidth: 2,
+								}
+							},
+							plugins: {
+								legend: {
+									position: 'right',
+								},
+								title: {
+									display: false,
+									text: 'Chart.js Horizontal Bar Chart'
+								}
+							},
+							animation: {
+								duration: 500,
+								easing: "easeOutQuart",
+								onComplete: function () {
+									var ctx = this.chart.ctx;
+									ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontFamily, 'normal', Chart.defaults.global.defaultFontFamily);
+									ctx.textAlign = 'bottom';
+									ctx.textBaseline = 'bottom';
+
+									this.data.datasets.forEach(function (dataset) {
+										for (var i = 0; i < dataset.data.length; i++) {
+											var model = dataset._meta[Object.keys(dataset._meta)[0]].data[i]._model,
+												scale_max = dataset._meta[Object.keys(dataset._meta)[0]].data[i]._yScale.maxHeight;
+											ctx.fillStyle = '#444';
+											var y_pos = model.y;
+											var x_pos;
+											var cusdata = ''
+											var x_pos = model.x+3;
+											if(val == 'ROAS'){
+												if(dataset.data[i]  > 0){
+													cusdata = (dataset.data[i]).toFixed(2)
+													if(Math.max(...dataset.data) == dataset.data[i]){
+															x_pos = model.x-50
+													}
+												}else if(dataset.data[i] < 0){
+													cusdata = (dataset.data[i]).toFixed(2)
+												}
+											}else{
+												if (dataset.data[i]> 1000){
+													cusdata = '$'+Math.round(dataset.data[i]/1000)+'K'
+												if(`${Math.round(dataset.data[i]/1000)}`.length > 2){
+													if(Math.max(...dataset.data) == dataset.data[i]){
+														x_pos = model.x-45
+													}												
+													}
+												}else if(dataset.data[i] < 1000 && dataset.data[i] > 0){
+													cusdata = '$'+(dataset.data[i]).toFixed(2)
+													if(Math.max(...dataset.data) == dataset.data[i]){
+															x_pos = model.x-50
+													}
+												}else if(dataset.data[i] < 0){
+													if(Math.abs(dataset.data[i]) > 1000){
+														cusdata = '$'+Math.round(dataset.data[i]/1000)*(-1)+'K'
+													}else{
+														cusdata = '$'+Math.round(dataset.data[i])*(-1)
+													}
+												}
+											}
+											ctx.fillText(cusdata, x_pos, y_pos+5);
+										}
+									});
+								}
+							},
+							scales: {
+								xAxes: [{
+									ticks: {
+										callback:function(value , index) {
+											if (val == 'ROAS') {
+												return value
+											}else{
+												return '$'+value/1000+'K'
+											}
+										}
+									}
+								}],
+								yAxes: [{
+									ticks: {
+										callback:function(value , index) {
+											return ''
+										}
+									}
+								}],
+							},
+							legend: {
+								display:false,
+								position : 'bottom',
+								labels : {
+									fontColor: 'rgb(154, 154, 154)',
+									fontSize: 12,
+									usePointStyle : true,
+									padding: 20
+								}
+							},
+							tooltips: {
+								bodySpacing: 4,
+								mode:"nearest",
+								intersect: 0,
+								position:"nearest",
+								xPadding:10,
+								yPadding:10,
+								caretPadding:10,
+								callbacks: {
+									label: function(tooltipItem, data) {
+										var text =  ( Number((tooltipItem.xLabel).toFixed(2)).toLocaleString("en-US"))
+									return text;
+									}
+								}
+							},
+							layout:{
+								padding:{left:15,right:15,top:15,bottom:15}
+							}
+						}
+					});
+				})
+		}
+
+		function MediaRecommendations(val) {
+			if(val == 'Base') {
+				
+				$("#BaseSenario").removeClass('d-none')
+				$("#RoasSenario").addClass('d-none')
+				$("#MedbaseSenario").addClass('active')
+				$("#MedroasOptimize").removeClass('active')
+			}else{
+				$("#BaseSenario").addClass('d-none')
+				$("#RoasSenario").removeClass('d-none')
+				$("#MedbaseSenario").removeClass('active')
+				$("#MedroasOptimize").addClass('active')
+			}
+		}
+		// Scenario Revenue projection //
+
+		multipleLineChart = document.getElementById('lineChart').getContext('2d')
+		var myMultipleLineChart = new Chart(multipleLineChart, {
+			type: 'line',
+			data: {
+				labels: {{ScenarioTimeserieslabels|safe}},
+				datasets: [{
+					label: "Predicted Revenue (Base Scenario)",
+					borderColor: "#1d7af3",
+					pointBorderColor: "#FFF",
+					pointBackgroundColor: "#1d7af3",
+					pointBorderWidth: 2,
+					pointHoverRadius: 4,
+					pointHoverBorderWidth: 1,
+					pointRadius: 0,
+					backgroundColor: 'transparent',
+					fill: false,
+					borderWidth: 2,
+					data: {{BaseScenario|safe}}
+				},{
+					label: "Predicted Revenue (ROAS Optimized)",
+					borderColor: "red",
+					pointBorderColor: "#FFF",
+					pointBackgroundColor: "#1d7af3",
+					pointBorderWidth: 2,
+					pointHoverRadius: 4,
+					pointHoverBorderWidth: 1,
+					pointRadius: 0,
+					backgroundColor: 'transparent',
+					fill: false,
+					borderWidth: 2,
+					data: {{ROASOptimized|safe}}
+				}]
+			},
+			options : {
+				responsive: true, 
+				maintainAspectRatio: false,
+				legend: {
+					display:true,
+					position : 'bottom',
+					labels : {
+						fontColor: 'rgb(154, 154, 154)',
+						fontSize: 12,
+						usePointStyle : true,
+						padding: 20
+					}
+				},
+				tooltips: {
+					bodySpacing: 4,
+					mode:"nearest",
+					intersect: 0,
+					position:"nearest",
+					xPadding:10,
+					yPadding:10,
+					caretPadding:10,
+					callbacks: {
+						label: function(tooltipItem, data) {
+							var text =  ( Number((tooltipItem.yLabel).toFixed(2)).toLocaleString("en-US"))
+						return text;
+						}
+					}
+				},
+				scales: {
+					yAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: 'Revenue'
+					},
+					ticks: {
+						callback:function(value , index) {
+							return value.toLocaleString("en-US")
+						}
+					}
+					}],
+					xAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: 'Week'
+					}
+					}]
+				},
+				layout:{
+					padding:{left:15,right:15,top:15,bottom:15}
+				}
+			}
+		});
+
+
+		// Chart with HTML Scenario Contribution
+		htmlLegendsChart = document.getElementById('htmlLegendsChart').getContext('2d');
+		ScenarioContribution('Base Scenario')
+		function ScenarioContribution(val) {
+			if(val == 'Base Scenario') {
+				$('#baseSenario').addClass('active')
+				$('#roasOptimize').removeClass('active')
+			}else{
+				$('#baseSenario').removeClass('active')
+				$('#roasOptimize').addClass('active')
+			}
+			$.ajax({
+				url: "/index/scenariocontribution",
+				type: "POST",
+				data: {
+					filter: val,
+					user_id:$('#userid').val(),
+					content_type: "json",
+				},
+				}).then(function (response) {
+					var basesaleobj = {}
+					var basesaleData = []
+					for (const[index, [key, value]] of Object.entries(Object.entries(response.ScenarioContributionData))) {
+						if(key.includes('revenue_')){
+							basesaleobj['label'] = (key.replace('revenue_','')).replace('_',' ')			
+						}else{
+							basesaleobj['label'] = key
+						}
+						basesaleobj['data'] = value
+						basesaleobj['borderColor'] = ChannelColorArr[basesaleobj['label']]
+						basesaleobj['pointBackgroundColor'] = ChannelColorArr[basesaleobj['label']]
+						basesaleobj['backgroundColor'] = ChannelColorArr[basesaleobj['label']]
+						basesaleobj['pointRadius'] = 0
+						basesaleobj['borderWidth'] = 1
+						basesaleData.push({...basesaleobj})
+					
+					}
+					var myHtmlLegendsChart = new Chart(htmlLegendsChart, {
+						type: 'line',
+						data: {
+							labels: response.label,
+							datasets: basesaleData
+						},
+						options : {
+							responsive: true, 
+							maintainAspectRatio: false,
+							legend: {
+								display:true,
+								position : 'bottom',
+								labels : {
+									fontColor: 'rgb(154, 154, 154)',
+									fontSize: 12,
+									usePointStyle : true,
+									padding: 20
+								}
+							},
+							scales: {
+									yAxes: [{
+									scaleLabel: {
+										display: true,
+										labelString: 'Revenue'
+									},
+									ticks: {
+										callback:function(value , index) {
+											return value.toLocaleString("en-US")
+										}
+									},
+									stacked: true
+									}],
+									xAxes: [{
+									scaleLabel: {
+										display: true,
+										labelString: 'Week'
+									},
+									stacked: true
+									}]
+								},
+							tooltips: {
+								bodySpacing: 4,
+								mode:"nearest",
+								intersect: 0,
+								position:"nearest",
+								xPadding:10,
+								yPadding:10,
+								caretPadding:10,
+								callbacks: {
+									label: function(tooltipItem, data) {
+										var text =  ( Number((tooltipItem.yLabel).toFixed(2)).toLocaleString("en-US"))
+									return text;
+									}
+								}
+							},
+							layout:{
+								padding:{left:15,right:15,top:15,bottom:15}
+							}
+						}
+					});
+				})
+		}	
+	</script>
+	<script>
+		var bwidth=0
+		$("button.btnGroup").each(function(i,v){
+			if($(v).width()>bwidth) bwidth=$(v).width();
+		});
+		$("button.btnGroup").width(bwidth);
+	</script>
+
+{% endblock javascripts %}
