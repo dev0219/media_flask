@@ -92,6 +92,7 @@
 		// Scenario Revenue projection //
         var InitialData = {{DFData|safe}}
 		var ChannelColorArr = {{ChannelColorArr|safe}}
+		var TargetName = `{{TargetName|safe}}`
 		var spendAll = [];
 		var spendobj = {};
 		var imprAll = [];
@@ -149,7 +150,7 @@
 					backgroundColor: "#1d7af3",
 					fill: false,
 					borderWidth: 2,
-					data: InitialData['Revenue']
+					data: InitialData[TargetName]
 				}]
 			},
 			options : {
@@ -184,7 +185,7 @@
 					yAxes: [{
 					scaleLabel: {
 						display: true,
-						labelString: 'Revenue'
+						labelString: TargetName
 					},
 					ticks: {
 						callback:function(value , index) {

@@ -43,7 +43,7 @@
 						<div class="row" id="BaseSenario">
 							<div class="px-1" style="border-right: 2px solid;max-width: 182px;">
 								{% for item in MediaHeaderTitle%}
-								<div class="d-flex w-100 px-2 py-2 justify-content-center"><div class="btn-group " style="border-bottom: 2px solid white;padding-bottom: 4px;"><button type="button" class="btn btn-link  btn-md" style="width:182px;height: 50px;">{{item}}</button></div></div>
+								<div class="d-flex w-100 px-2 py-2 justify-content-center"><div class="btn-group " style="border-bottom: 2px solid white;padding-bottom: 4px;"><button type="button" class="btn btn-link  btn-md" style="width:200px;height: 50px;">{{item}}</button></div></div>
 								{% endfor %}
 							</div>
 							<div class="col-md-10" style="overflow: auto;">
@@ -104,7 +104,7 @@
 					  <div class="card-header"> 
 						<div class="card-title">							
 							<button type="button" name="channel" id="SpendButton"  class="btn btn-outline-primary  btn-sm active"  style="width:100px;height: 30px;" onclick="ScenarioComparison('Spend')">Spend</button>
-							<button type="button" name="channel" id="RevenueButton"   class="btn btn-outline-primary  btn-sm"  style="width:100px;height: 30px;" onclick="ScenarioComparison('Revenue')">Revenue</button>	
+							<button type="button" name="channel" id="RevenueButton"   class="btn btn-outline-primary  btn-sm"  style="width:100px;height: 30px;" onclick="ScenarioComparison('{{TargetName}}')">{{TargetName}}</button>	
 							<button type="button" name="channel" id="ROASButton"   class="btn btn-outline-primary  btn-sm"  style="width:100px;height: 30px;" onclick="ScenarioComparison('ROAS')">ROAS</button><br><br>
 							<div id="comparisontitle"></div>
 						</div> 
@@ -140,7 +140,7 @@
 					<div class="card"> 
 					  <div class="card-header"> 
 						<div class="card-title">
-							Scenario Revenue Projection
+							Scenario {{TargetName}} Projection
 							<input type="hidden" name="s" id="userid" value="{{userid}}">
 						</div> 
 					  </div> 
@@ -180,18 +180,25 @@
 	
 	<script>
 		var ChannelColorArr = {{ChannelColorArr|safe}}
+		var bstargetName = `{{BaseTargetName|safe}}`
+		var TargentName = `{{TargetName|safe}}`
 		ScenarioComparison('Spend')
+		var myscenarioComparisonBaseChart;
+		var myscenarioComparisonDiffChart;
+		var myscenarioComparisonRoasChart;
+		var myHtmlLegendsChart;
 		function ScenarioComparison(val) {
+			console.log('compra==============', val);
 			if(val == 'Spend') {
 				$("#SpendButton").addClass('active')
 				$("#RevenueButton").removeClass('active')
 				$("#ROASButton").removeClass('active')
 				document.getElementById("comparisontitle").innerHTML = 'Scenario Comparison : Spend'
-			}else if(val == 'Revenue') {
+			}else if(val == TargentName) {
 				$("#SpendButton").removeClass('active')
 				$("#RevenueButton").addClass('active')
 				$("#ROASButton").removeClass('active')
-				document.getElementById("comparisontitle").innerHTML = 'Scenario Comparison : Revenue'
+				document.getElementById("comparisontitle").innerHTML = 'Scenario Comparison :'+TargentName
 			}else{
 				$("#SpendButton").removeClass('active')
 				$("#RevenueButton").removeClass('active')
@@ -207,10 +214,11 @@
 					content_type: "json",
 				},
 				}).then(function (response) {
-					console.log('-- api comparison ---');
-					console.log(response);
 					// Scenario  Comparison
-					
+					var spendtotal = '';
+					var revenuetotal = '';
+					var difftotal = '';
+
 					if(document.getElementById("comparisontitle").innerHTML == 'Scenario Comparison : Spend'){
 						document.getElementById("Percentage").innerHTML = response.TotalPecentage[0].toLocaleString("en-US") + '%'
 						if(response.TotalPecentage[0] > 0) {
@@ -218,7 +226,9 @@
 						}else{
 							document.getElementById("Percentage").style.color = 'red'
 						}
-						
+						spendtotal = 'Total : '+'$'+Math.round(response.BaseTotal[0]).toLocaleString("en-US") ;
+						revenuetotal = 'Total : '+'$'+Math.round(response.RoasTotal[0]).toLocaleString("en-US") ;
+						difftotal = 'Total : '+'$'+Math.round(response.DiffTotal[0]).toLocaleString("en-US") ;
 					}else if(document.getElementById("comparisontitle").innerHTML == 'Scenario Comparison : Revenue') {
 						document.getElementById("Percentage").innerHTML = response.TotalPecentage[1].toLocaleString("en-US") + '%'
 						if(response.TotalPecentage[1] > 0) {
@@ -226,6 +236,9 @@
 						}else{
 							document.getElementById("Percentage").style.color = 'red'
 						}
+						spendtotal = 'Total : '+'$'+Math.round(response.BaseTotal[1]).toLocaleString("en-US") ;
+						revenuetotal = 'Total : '+'$'+Math.round(response.RoasTotal[1]).toLocaleString("en-US") ;
+						difftotal = 'Total : '+'$'+Math.round(response.DiffTotal[1]).toLocaleString("en-US") ;
 					}else{
 						document.getElementById("Percentage").innerHTML = response.TotalPecentage[2].toLocaleString("en-US") + '%'
 						if(response.TotalPecentage[2] > 0) {
@@ -233,26 +246,9 @@
 						}else{
 							document.getElementById("Percentage").style.color = 'red'
 						}
-					}
-					var spendtotal = '';
-					var revenuetotal = '';
-					var difftotal = '';
-					if(response.BaseScenarioComparison.reduce((partialSum, a) => partialSum + a, 0) > 0) {
-						spendtotal = 'Total : '+'$'+Math.round(response.BaseScenarioComparison.reduce((partialSum, a) => partialSum + a, 0)).toLocaleString("en-US") ;					
-					}else{
-						spendtotal = 'Total : '+'-$'+Math.round(Math.abs(response.BaseScenarioComparison.reduce((partialSum, a) => partialSum + a, 0))).toLocaleString("en-US") ;
-					}
-
-					if(response.ROASOptimizedComparison.reduce((partialSum, a) => partialSum + a, 0) > 0) {
-						revenuetotal = 'Total : '+'$'+Math.round(response.ROASOptimizedComparison.reduce((partialSum, a) => partialSum + a, 0)).toLocaleString("en-US");					
-					}else{
-						revenuetotal = 'Total : '+'-$'+Math.round(Math.abs(response.ROASOptimizedComparison.reduce((partialSum, a) => partialSum + a, 0))).toLocaleString("en-US");
-					}
-
-					if(response.DifferentComparison.reduce((partialSum, a) => partialSum + a, 0) > 0) {
-						difftotal = 'Total : '+'$'+Math.round(response.DifferentComparison.reduce((partialSum, a) => partialSum + a, 0)).toLocaleString("en-US");						
-					}else{
-						difftotal = 'Total : '+'-'+'$'+Math.round(Math.abs(response.DifferentComparison.reduce((partialSum, a) => partialSum + a, 0))).toLocaleString("en-US");
+						spendtotal = 'Total : '+'$'+response.BaseTotal[2].toLocaleString("en-US") ;
+						revenuetotal = 'Total : '+'$'+response.RoasTotal[2].toLocaleString("en-US") ;
+						difftotal = 'Total : '+'$'+response.DiffTotal[2].toLocaleString("en-US") ;
 					}
 					if(val == 'ROAS'){
 						spendtotal = spendtotal.replace('$','')
@@ -262,12 +258,19 @@
 					document.getElementById("spendtotal").innerHTML = spendtotal
 					document.getElementById("revenuetotal").innerHTML = revenuetotal
 					document.getElementById("difftotal").innerHTML = difftotal
+				
+					
 					scenarioComparisonBaseChart = document.getElementById('scenarioComparisonBase').getContext('2d')
 					borderColorArr = [];
 					for (var i=0;i<response.ScenarioComparisonlabel.length;i++) {
 						borderColorArr[i] = ChannelColorArr[response.ScenarioComparisonlabel[i]]
 					}
-					var myscenarioComparisonBaseChart = new Chart(scenarioComparisonBaseChart, {
+					
+					// 
+					if (myscenarioComparisonBaseChart) {
+						myscenarioComparisonBaseChart.destroy();
+					}
+					myscenarioComparisonBaseChart = new Chart(scenarioComparisonBaseChart, {
 						type: 'horizontalBar',
 						data: {
 							labels: response.ScenarioComparisonlabel,
@@ -287,6 +290,7 @@
 							}]
 						},
 						options : {
+							events: [],
 							responsive: true, 
 							maintainAspectRatio: false,
 							indexAxis: 'y',
@@ -309,18 +313,14 @@
 										for (var i = 0; i < dataset.data.length; i++) {
 											var model = dataset._meta[Object.keys(dataset._meta)[0]].data[i]._model;
 											scale_max = dataset._meta[Object.keys(dataset._meta)[0]].data[i]._yScale.maxHeight;
-											ctx.fillStyle = '#444';
+											ctx.fillStyle = 'black';
 											var y_pos = model.y;
 											var cusdata = ''
 											var x_pos = model.x+3;
 											if(val == 'ROAS'){
-												if(dataset.data[i]  > 0){
-													cusdata = (dataset.data[i]).toFixed(2)
-													if(Math.max(...dataset.data) == dataset.data[i]){
+												cusdata = (dataset.data[i]).toFixed(2)+'x'
+												if(Math.max(...dataset.data) == dataset.data[i]){
 															x_pos = model.x-50
-													}
-												}else if(dataset.data[i] < 0){
-													cusdata = (dataset.data[i]).toFixed(2)
 												}
 											}else{
 												if (dataset.data[i]> 1000){
@@ -360,6 +360,7 @@
 								}
 							},
 							tooltips: {
+								enabled:true,
 								bodySpacing: 4,
 								mode:"nearest",
 								intersect: 0,
@@ -404,8 +405,10 @@
 
 					scenarioComparisonRoasChart = document.getElementById('scenarioComparisonRoas').getContext('2d')
 					var Roasvalue = response.ROASOptimizedComparison;
-					
-					var myscenarioComparisonRoasChart = new Chart(scenarioComparisonRoasChart, {
+					if (myscenarioComparisonRoasChart) {
+						myscenarioComparisonRoasChart.destroy();
+					}
+					myscenarioComparisonRoasChart = new Chart(scenarioComparisonRoasChart, {
 						type: 'horizontalBar',
 						data: {
 							labels: response.ScenarioComparisonlabel,
@@ -425,6 +428,7 @@
 							}]
 						},
 						options : {
+							events: [],
 							responsive: true, 
 							maintainAspectRatio: false,
 							indexAxis: 'y',
@@ -472,13 +476,9 @@
 											var cusdata = ''
 											var x_pos = model.x+3;
 											if(val == 'ROAS'){
-												if(dataset.data[i]  > 0){
-													cusdata = (dataset.data[i]).toFixed(2)
-													if(Math.max(...dataset.data) == dataset.data[i]){
+												cusdata = (dataset.data[i]).toFixed(2)+'x'
+												if(Math.max(...dataset.data) == dataset.data[i]){
 															x_pos = model.x-50
-													}
-												}else if(dataset.data[i] < 0){
-													cusdata = (dataset.data[i]).toFixed(2)
 												}
 											}else{
 												if (dataset.data[i]> 1000){
@@ -549,7 +549,10 @@
 					});
 
 					scenarioComparisonDiffChart = document.getElementById('scenarioComparisonDiff').getContext('2d')
-					var myscenarioComparisonDiffChart = new Chart(scenarioComparisonDiffChart, {
+					if (myscenarioComparisonDiffChart) {
+						myscenarioComparisonDiffChart.destroy();
+					}
+					myscenarioComparisonDiffChart = new Chart(scenarioComparisonDiffChart, {
 						type: 'horizontalBar',
 						data: {
 							labels: response.ScenarioComparisonlabel,
@@ -569,6 +572,7 @@
 							}]
 						},
 						options : {
+							events: [],
 							responsive: true, 
 							maintainAspectRatio: false,
 							indexAxis: 'y',
@@ -607,13 +611,9 @@
 											var cusdata = ''
 											var x_pos = model.x+3;
 											if(val == 'ROAS'){
-												if(dataset.data[i]  > 0){
-													cusdata = (dataset.data[i]).toFixed(2)
-													if(Math.max(...dataset.data) == dataset.data[i]){
+												cusdata = (dataset.data[i]).toFixed(2)+'x'
+												if(Math.max(...dataset.data) == dataset.data[i]){
 															x_pos = model.x-50
-													}
-												}else if(dataset.data[i] < 0){
-													cusdata = (dataset.data[i]).toFixed(2)
 												}
 											}else{
 												if (dataset.data[i]> 1000){
@@ -695,8 +695,7 @@
 		}
 
 		function MediaRecommendations(val) {
-			if(val == 'Base') {
-				
+			if(val == 'Base') {				
 				$("#BaseSenario").removeClass('d-none')
 				$("#RoasSenario").addClass('d-none')
 				$("#MedbaseSenario").addClass('active')
@@ -716,7 +715,7 @@
 			data: {
 				labels: {{ScenarioTimeserieslabels|safe}},
 				datasets: [{
-					label: "Predicted Revenue (Base Scenario)",
+					label: "Predicted "+TargentName+" (Base Scenario)",
 					borderColor: "#1d7af3",
 					pointBorderColor: "#FFF",
 					pointBackgroundColor: "#1d7af3",
@@ -729,7 +728,7 @@
 					borderWidth: 2,
 					data: {{BaseScenario|safe}}
 				},{
-					label: "Predicted Revenue (ROAS Optimized)",
+					label: "Predicted "+TargentName+" (ROAS Optimized)",
 					borderColor: "red",
 					pointBorderColor: "#FFF",
 					pointBackgroundColor: "#1d7af3",
@@ -775,7 +774,7 @@
 					yAxes: [{
 					scaleLabel: {
 						display: true,
-						labelString: 'Revenue'
+						labelString: TargentName
 					},
 					ticks: {
 						callback:function(value , index) {
@@ -817,24 +816,30 @@
 					content_type: "json",
 				},
 				}).then(function (response) {
+					console.log('---response', response);
 					var basesaleobj = {}
 					var basesaleData = []
 					for (const[index, [key, value]] of Object.entries(Object.entries(response.ScenarioContributionData))) {
 						if(key.includes('revenue_')){
 							basesaleobj['label'] = (key.replace('revenue_','')).replace('_',' ')			
+						}else if(key.includes('orders_')){
+							basesaleobj['label'] = (key.replace('orders_','')).replace('_',' ')			
 						}else{
 							basesaleobj['label'] = key
 						}
 						basesaleobj['data'] = value
 						basesaleobj['borderColor'] = ChannelColorArr[basesaleobj['label']]
 						basesaleobj['pointBackgroundColor'] = ChannelColorArr[basesaleobj['label']]
-						basesaleobj['backgroundColor'] = ChannelColorArr[basesaleobj['label']]
+						basesaleobj['backgroundColor'] = ChannelColorArr[basesaleobj['label']]					
 						basesaleobj['pointRadius'] = 0
 						basesaleobj['borderWidth'] = 1
 						basesaleData.push({...basesaleobj})
 					
 					}
-					var myHtmlLegendsChart = new Chart(htmlLegendsChart, {
+					if(myHtmlLegendsChart) {
+						myHtmlLegendsChart.destroy()
+					}
+					myHtmlLegendsChart = new Chart(htmlLegendsChart, {
 						type: 'line',
 						data: {
 							labels: response.label,
@@ -857,7 +862,7 @@
 									yAxes: [{
 									scaleLabel: {
 										display: true,
-										labelString: 'Revenue'
+										labelString: TargentName
 									},
 									ticks: {
 										callback:function(value , index) {

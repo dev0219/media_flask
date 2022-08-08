@@ -121,13 +121,18 @@ def validation():
     client_img_arr = ClientImgData.query.filter_by(user_id=user.id)
 
     excel_Sheet_names = (pd.ExcelFile(client_data.data)).sheet_names
-    if not 'Timeseries Plot' in excel_Sheet_names :
+    if not 'Timeseries Plot' in excel_Sheet_names or not 'Model Error' in excel_Sheet_names :
         errormsg = 'The Model Validation Database does not exist.'
         return render_template('home/notfound.html',ErrorMsg = errormsg,userid=user.id,username=us)
 
     clientImg = []
     for imgitem in client_img_arr:
         clientImg.append({'id':imgitem.id,'filename':((imgitem.filename.replace('_',' ')).replace('.png','').replace('.jpg',''))})
+
+    errorData = pd.read_excel(client_data.data,sheet_name='Model Error')
+
+    trainerror = errorData.iloc[:,1].tolist()
+    testerror = errorData.iloc[:,2].tolist()
 
     timeseries = pd.read_excel(client_data.data,sheet_name='Timeseries Plot')
     timeseries = timeseries.fillna('Nan')
@@ -136,11 +141,13 @@ def validation():
     actualRev = timeseries.iloc[:,3].tolist()
     predRevTest = timeseries.iloc[:,4].tolist()
     labels2 = timeseries.iloc[:,1].tolist()
-    
-
+    NumArr = []
+    for index, item_ in enumerate(predRevTest, start=0):
+        if item_ != 'Nan':
+            NumArr.append(index)
     columnNames = timeseries.columns.tolist()[2:]
     
-    return render_template('home/modelvalidation.html',ClientimageID = clientImg,username=us,userid=user.id,first=columnNames[0],second =columnNames[1] ,third = columnNames[2], predRevTrain=predRevTrain,actualRev =actualRev,predRevTest =predRevTest, labels2 =labels2)
+    return render_template('home/modelvalidation.html',Trainerror=round(trainerror[0]*100, 2),Testerror=round(testerror[0]*100, 2), NumArr=NumArr,ClientimageID = clientImg,username=us,userid=user.id,first=columnNames[0],second =columnNames[1] ,third = columnNames[2], predRevTrain=predRevTrain,actualRev =actualRev,predRevTest =predRevTest, labels2 =labels2)
 
 @blueprint.route('/recommendation', methods=["GET", "POST"])
 @login_required
@@ -160,6 +167,18 @@ def recommendation():
     client_data = ClientData.query.filter_by(user_id=user.id).first()
 
     excel_Sheet_names = (pd.ExcelFile(client_data.data)).sheet_names
+    if not 'Target Names' in excel_Sheet_names:
+        errormsg = 'The Target Names does not exist.'        
+        return render_template('home/notfound.html',ErrorMsg = errormsg,userid=user.id,username=us)    
+    TargetNamesData = pd.read_excel (client_data.data,sheet_name='Target Names')
+    TargetNamesHeaderArr = pd.read_excel (client_data.data,sheet_name='Target Names',nrows=0)
+    TargetNamesArr = {}
+    for item_header in TargetNamesHeaderArr:
+        if item_header == 'Target Name':
+           TargetNamesArr[item_header] = TargetNamesData.iloc[:,next((i for i, item in enumerate(TargetNamesHeaderArr.columns) if item == item_header), -1)].tolist()
+        if item_header == 'Base Target Name':
+           TargetNamesArr[item_header] = TargetNamesData.iloc[:,next((i for i, item in enumerate(TargetNamesHeaderArr.columns) if item == item_header), -1)].tolist()
+    
 
     'Media Channels Color Setting'
     if not 'Media Channels' in excel_Sheet_names:
@@ -211,13 +230,14 @@ def recommendation():
             MediaData[item_header] = []
             MediaHeaderTitle.append((item_header.replace('macro_notable_','')).replace('_', ' '))
             MediaData[item_header] = AllRecommendationsData.iloc[:,next((i for i, item in enumerate(RecommendationsDataHeaderArr.columns) if item == item_header), -1)].tolist()
-          
+    for item_header in RecommendationsDataHeaderArr:          
         if 'spend_' in item_header:
             MediaData[item_header] = []
             MediaHeaderTitle.append((item_header.replace('spend_','')).replace('_', ' '))
             MediaData[item_header] = AllRecommendationsData.iloc[:,next((i for i, item in enumerate(RecommendationsDataHeaderArr.columns) if item == item_header), -1)].tolist()
     
     Recommendation_List = {}
+   
     for k,v in MediaData.items():
         Recommendation_List[k] = {'Base':[],'Roas':[]}
         for index, item in enumerate(ScenarioComparison, start=0):
@@ -231,8 +251,9 @@ def recommendation():
                     Recommendation_List[k]['Roas'].append('$'+str(round(v[index]/1000))+'K')
                 else:
                     Recommendation_List[k]['Roas'].append(v[index]) 
- 
-    return render_template('home/mediarecommendation.html',ChannelColorArr=ChannelColorArr,MediaHeaderTitle=MediaHeaderTitle,Recommendation_List=Recommendation_List,username=us,userid=user.id,ROASOptimized=ROASOptimized,BaseScenario=BaseScenario,ScenarioTimeserieslabels=ScenarioTimeserieslabels,BaseScenarioComparison=BaseScenarioComparison,ROASOptimizedComparison=ROASOptimizedComparison,DifferentComparison=DifferentComparison,ScenarioComparisonlabel=ScenarioComparisonlabel)
+    print('--- media plan data ---')
+    print(Recommendation_List)
+    return render_template('home/mediarecommendation.html',TargetName = TargetNamesArr['Target Name'][0],BaseTargetName=TargetNamesArr['Base Target Name'][0], ChannelColorArr=ChannelColorArr,MediaHeaderTitle=MediaHeaderTitle,Recommendation_List=Recommendation_List,username=us,userid=user.id,ROASOptimized=ROASOptimized,BaseScenario=BaseScenario,ScenarioTimeserieslabels=ScenarioTimeserieslabels,BaseScenarioComparison=BaseScenarioComparison,ROASOptimizedComparison=ROASOptimizedComparison,DifferentComparison=DifferentComparison,ScenarioComparisonlabel=ScenarioComparisonlabel)
 @blueprint.route('/modelinput', methods=["GET", "POST"])
 @login_required
 def modelinput():
@@ -251,7 +272,14 @@ def modelinput():
     client_data = ClientData.query.filter_by(user_id=user.id).first()
 
     excel_Sheet_names = (pd.ExcelFile(client_data.data)).sheet_names
-
+    TargetNamesData = pd.read_excel (client_data.data,sheet_name='Target Names')
+    TargetNamesHeaderArr = pd.read_excel (client_data.data,sheet_name='Target Names',nrows=0)
+    TargetNamesArr = {}
+    for item_header in TargetNamesHeaderArr:
+        if item_header == 'Target Name':
+            TargetNamesArr[item_header] = TargetNamesData.iloc[:,next((i for i, item in enumerate(TargetNamesHeaderArr.columns) if item == item_header), -1)].tolist()
+        if item_header == 'Base Target Name':
+                TargetNamesArr[item_header] = TargetNamesData.iloc[:,next((i for i, item in enumerate(TargetNamesHeaderArr.columns) if item == item_header), -1)].tolist()
     
     if not 'Raw Data' in excel_Sheet_names:
         errormsg = 'The Model Input Summary Database does not exist.'
@@ -282,7 +310,7 @@ def modelinput():
         if item_header == 'Day':
             DFData[item_header] = []
             DFData[item_header] = DFDataArr.iloc[:,next((i for i, item in enumerate(DFHeaderArr.columns) if item == item_header), -1)].tolist()
-        if item_header == 'Revenue':
+        if item_header == TargetNamesArr['Target Name'][0]:
             DFData[item_header] = []
             DFData[item_header] = DFDataArr.iloc[:,next((i for i, item in enumerate(DFHeaderArr.columns) if item == item_header), -1)].tolist()
         if 'impr_' in item_header:
@@ -294,7 +322,7 @@ def modelinput():
             DFData[item_header] = DFDataArr.iloc[:,next((i for i, item in enumerate(DFHeaderArr.columns) if item == item_header), -1)].tolist()
    
  
-    return render_template('home/modelinputsummary.html',username=us,userid=user.id,DFData=DFData,ChannelColorArr=ChannelColorArr)
+    return render_template('home/modelinputsummary.html',TargetName = TargetNamesArr['Target Name'][0], username=us,userid=user.id,DFData=DFData,ChannelColorArr=ChannelColorArr)
 
 @blueprint.route('/channelintegration', methods=["GET", "POST"])
 @login_required
@@ -372,6 +400,21 @@ def output():
     if not 'Media Channels' in excel_Sheet_names:
         errormsg = 'The Media Channels does not exist.'        
         return render_template('home/notfound.html',ErrorMsg = errormsg,userid=user.id,username=us)
+
+    if not 'Target Names' in excel_Sheet_names:
+        errormsg = 'The Target Names does not exist.'        
+        return render_template('home/notfound.html',ErrorMsg = errormsg,userid=user.id,username=us)
+    
+    TargetNamesData = pd.read_excel (client_data.data,sheet_name='Target Names')
+    TargetNamesHeaderArr = pd.read_excel (client_data.data,sheet_name='Target Names',nrows=0)
+    TargetNamesArr = {}
+    for item_header in TargetNamesHeaderArr:
+        if item_header == 'Target Name':
+           TargetNamesArr[item_header] = TargetNamesData.iloc[:,next((i for i, item in enumerate(TargetNamesHeaderArr.columns) if item == item_header), -1)].tolist()
+        if item_header == 'Base Target Name':
+           TargetNamesArr[item_header] = TargetNamesData.iloc[:,next((i for i, item in enumerate(TargetNamesHeaderArr.columns) if item == item_header), -1)].tolist()
+    print('---- out put -----')
+    print(TargetNamesArr['Base Target Name'][0])
     ChannelsData = pd.read_excel (client_data.data,sheet_name='Media Channels')
     ChannelsHeaderArr = pd.read_excel (client_data.data,sheet_name='Media Channels',nrows=0)
     ChannelColorArr = {}
@@ -382,8 +425,8 @@ def output():
     StackedPlotContribution = pd.read_excel (client_data.data,sheet_name='Stacked Plot Contribution')
     StackedPlotContributionHeaderArr = pd.read_excel (client_data.data,sheet_name='Stacked Plot Contribution',nrows=0)  
     StackedPlotContributionData = {}
-    for item_header in StackedPlotContributionHeaderArr: 
-        if  item_header == 'Base Revenue':
+    for item_header in StackedPlotContributionHeaderArr:
+        if  item_header == TargetNamesArr['Base Target Name'][0]:
             StackedPlotContributionData[item_header] = []
             StackedPlotContributionData[item_header] = StackedPlotContribution.iloc[:,next((i for i, item in enumerate(StackedPlotContributionHeaderArr.columns) if item == item_header), -1)].tolist() 
         if item_header == 'Display':
@@ -401,7 +444,7 @@ def output():
         if item_header == 'Microsoft':
             StackedPlotContributionData[item_header] = []
             StackedPlotContributionData[item_header] = StackedPlotContribution.iloc[:,next((i for i, item in enumerate(StackedPlotContributionHeaderArr.columns) if item == item_header), -1)].tolist()
-   
+  
     labels = StackedPlotContribution.iloc[:,next((i for i, item in enumerate(StackedPlotContributionHeaderArr.columns) if item == 'Day'), -1)].tolist()
 
     pieContrib = pd.read_excel(client_data.data,sheet_name='Pie Chart Contribution')
@@ -440,7 +483,9 @@ def output():
     for item_header in AdstockedHeaderArr:
         if '_adstocked' in item_header and  'spend_' in item_header:
             HeaderArr.append(((item_header.replace('spend_','')).replace('_adstocked','')).replace('_',''))
-    return render_template('home/modeloutput.html',ChannelColorArr=ChannelColorArr,BaseSaleData=BaseSaleData,Tags=HeaderArr,username=us,userid=user.id, totalContribution=totalContribution, labels3 =labels3, StackedPlotContributionData=StackedPlotContributionData,labels = labels,
+    print('-Target Name')
+    print(TargetNamesArr['Base Target Name'][0])
+    return render_template('home/modeloutput.html',Targetname = TargetNamesArr['Target Name'][0],BaseTargetname = TargetNamesArr['Base Target Name'][0],ChannelColorArr=ChannelColorArr,BaseSaleData=BaseSaleData,Tags=HeaderArr,username=us,userid=user.id, totalContribution=totalContribution, labels3 =labels3, StackedPlotContributionData=StackedPlotContributionData,labels = labels,
     Baseline_labels=BaseSaleContributionlabels)
 
 @blueprint.route('/<template>')
@@ -486,10 +531,18 @@ def rosa():
     data={}
     if request.method == 'POST':
         client_data = ClientData.query.filter_by(user_id=request.values['user_id']).first()    
+        TargetNamesData = pd.read_excel (client_data.data,sheet_name='Target Names')
+        TargetNamesHeaderArr = pd.read_excel (client_data.data,sheet_name='Target Names',nrows=0)
+        TargetNamesArr = {}
+        for item_header in TargetNamesHeaderArr:
+            if item_header == 'Target Name':
+                TargetNamesArr[item_header] = TargetNamesData.iloc[:,next((i for i, item in enumerate(TargetNamesHeaderArr.columns) if item == item_header), -1)].tolist()
+            if item_header == 'Base Target Name':
+                TargetNamesArr[item_header] = TargetNamesData.iloc[:,next((i for i, item in enumerate(TargetNamesHeaderArr.columns) if item == item_header), -1)].tolist()
         RoasChanellLine = pd.read_excel (client_data.data,sheet_name='ROAS - '+request.values['filter'])
         RoasChanellLineHeaderArr = pd.read_excel (client_data.data,sheet_name='ROAS - '+request.values['filter'],nrows=0)
         WeeklySpendLine = RoasChanellLine.iloc[:,1].tolist()
-        RevenueLine = RoasChanellLine.iloc[:,next((i for i, item in enumerate(RoasChanellLineHeaderArr.columns) if item == 'Revenue'), -1)].tolist()
+        RevenueLine = RoasChanellLine.iloc[:,next((i for i, item in enumerate(RoasChanellLineHeaderArr.columns) if item == TargetNamesArr['Target Name'][0]), -1)].tolist()
         RoasLine = RoasChanellLine.iloc[:,next((i for i, item in enumerate(RoasChanellLineHeaderArr.columns) if item == 'ROAS'), -1)].tolist()
         data={'WeeklySpendLine':WeeklySpendLine,'RevenueLine':RevenueLine,'RoasLine':RoasLine}
     return data;
@@ -509,8 +562,11 @@ def scenariocomparison():
         
         TotalData = pd.read_excel (client_data.data,sheet_name='Media Plan Recommended Totals')
         TotalDataHeaderArr = pd.read_excel (client_data.data,sheet_name='Media Plan Recommended Totals',nrows=0)
+        BaseTotal = TotalData.iloc[:,next((i for i, item in enumerate(TotalDataHeaderArr.columns) if item == 'Base Scenario'), -1)].tolist()
+        RoasTotal = TotalData.iloc[:,next((i for i, item in enumerate(TotalDataHeaderArr.columns) if item == 'ROAS Optimized'), -1)].tolist()
+        DiffTotal = TotalData.iloc[:,next((i for i, item in enumerate(TotalDataHeaderArr.columns) if item == 'Difference'), -1)].tolist()
         TotalPecentage = TotalData.iloc[:,next((i for i, item in enumerate(TotalDataHeaderArr.columns) if item == 'Percent Change'), -1)].tolist()
-        data={'TotalPecentage':TotalPecentage,'ScenarioComparisonlabel':ScenarioComparisonlabel,'BaseScenarioComparison':BaseScenarioComparison,'ROASOptimizedComparison':ROASOptimizedComparison,'DifferentComparison':DifferentComparison}
+        data={'BaseTotal':BaseTotal,'RoasTotal':RoasTotal,'DiffTotal':DiffTotal,'TotalPecentage':TotalPecentage,'ScenarioComparisonlabel':ScenarioComparisonlabel,'BaseScenarioComparison':BaseScenarioComparison,'ROASOptimizedComparison':ROASOptimizedComparison,'DifferentComparison':DifferentComparison}
     return data;
 
 @blueprint.route("/index/scenariocontribution", methods=["GET", "POST"])
@@ -522,17 +578,26 @@ def scenariocontribution():
         ScenarioContribution = pd.read_excel (client_data.data,sheet_name=request.values['filter']+' Contribution')
         ScenarioContributionHeaderArr = pd.read_excel (client_data.data,sheet_name=request.values['filter']+' Contribution',nrows=0)
         
+        TargetNamesData = pd.read_excel (client_data.data,sheet_name='Target Names')
+        TargetNamesHeaderArr = pd.read_excel (client_data.data,sheet_name='Target Names',nrows=0)
+        TargetNamesArr = {}
+        for item_header in TargetNamesHeaderArr:
+            if item_header == 'Target Name':
+                TargetNamesArr[item_header] = TargetNamesData.iloc[:,next((i for i, item in enumerate(TargetNamesHeaderArr.columns) if item == item_header), -1)].tolist()
+            if item_header == 'Base Target Name':
+                TargetNamesArr[item_header] = TargetNamesData.iloc[:,next((i for i, item in enumerate(TargetNamesHeaderArr.columns) if item == item_header), -1)].tolist()
+    
         ScenarioContributionData = {}
         for item_header in ScenarioContributionHeaderArr:  
-            if item_header == 'Base Revenue':
+            if item_header == TargetNamesArr['Base Target Name'][0]:
                 ScenarioContributionData[item_header] = []     
                 ScenarioContributionData[item_header] = ScenarioContribution.iloc[:,next((i for i, item in enumerate(ScenarioContributionHeaderArr.columns) if item == item_header), -1)].tolist()  
-            if 'revenue_' in item_header:
+            if TargetNamesArr['Target Name'][0].lower() in item_header:
                 ScenarioContributionData[item_header] = []
                 ScenarioContributionData[item_header] = ScenarioContribution.iloc[:,next((i for i, item in enumerate(ScenarioContributionHeaderArr.columns) if item == item_header), -1)].tolist() 
         Scenariocontributionlabels = ScenarioContribution.iloc[:,next((i for i, item in enumerate(ScenarioContributionHeaderArr.columns) if item == 'Day'), -1)].tolist()
         print('===ScenarioContributionHeaderArr o')
-        print(ScenarioContributionData)
+        print(ScenarioContributionHeaderArr)
         data={'ScenarioContributionData':ScenarioContributionData,'label':Scenariocontributionlabels}
        
     return data

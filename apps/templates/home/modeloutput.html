@@ -149,6 +149,11 @@
 	<script>
         var ChannelColorArr = {{ChannelColorArr|safe}}
 		var defaultval = 'Display';
+		var AdstockedSpendChart;
+		var ImprChartPieChart;
+		var myMultipleLineChart;
+		var TargentName = `{{Targetname|safe}}`
+		var bsTargetName = `{{BaseTargetname|safe}}`
 		RoasFilter(defaultval);
 		AdstockedSpend(defaultval);
 		AdstockedImpr(defaultval);
@@ -171,9 +176,10 @@
 						roasobj['z'] = response.RoasLine[i]*1000
 						RoasArr.push(roasobj)
 					}
-					console.log('==== roas array ===')
-					console.log(RoasArr)
-					var myMultipleLineChart = new Chart(multipleLineChart, {
+					if(myMultipleLineChart) {
+						myMultipleLineChart.destroy()
+					}
+					myMultipleLineChart = new Chart(multipleLineChart, {
 						type: 'line',
 						data: {
 							labels: response.WeeklySpendLine,
@@ -218,7 +224,7 @@
 								yAxes: [{
 								scaleLabel: {
 									display: true,
-									labelString: 'Orders'
+									labelString: TargentName
 								},	
 								ticks: {
 									callback:function(value , index) {
@@ -257,7 +263,10 @@
 				},
 				}).then(function (response) {					
 					SpendChart = document.getElementById('SpendChart').getContext('2d');
-					var myPieChart = new Chart(SpendChart, {
+					if(AdstockedSpendChart) {
+						AdstockedSpendChart.destroy()
+					}
+					AdstockedSpendChart = new Chart(SpendChart, {
 						type: 'bar',
 						data: {
 							datasets: [{
@@ -338,7 +347,10 @@
 				},
 				}).then(function (response) {
 					ImprChart = document.getElementById('ImprChart').getContext('2d');
-					var myPieChart = new Chart(ImprChart, {
+					if(ImprChartPieChart) {
+						ImprChartPieChart.destroy()
+					}
+					ImprChartPieChart = new Chart(ImprChart, {
 						type: 'bar',
 						data: {
 							datasets: [{
@@ -472,15 +484,13 @@
 	
         var basesaleData = []
 		var basesaleobj = {}
-		var serverData = {{StackedPlotContributionData|safe}}
-		console.log('StackedPlotContributionData StackedPlotContributionData data');
-		const baseval = serverData['Base Revenue'];
-		delete serverData['Base Revenue'];
+		var serverData = {{StackedPlotContributionData|safe}}		
+		const baseval = serverData[bsTargetName];
+		delete serverData[bsTargetName];
 
-		// serverData['Base Revenue'] = baseval;
+		serverData[bsTargetName] = baseval;
 					
-		serverData= Object.assign({'Base Revenue':baseval},serverData)
-		console.log(serverData);
+		serverData= Object.assign({[bsTargetName]:baseval},serverData)
 		for (const[index, [key, value]] of Object.entries(Object.entries(serverData))) {
 		    
 			basesaleobj['label'] = key
@@ -534,6 +544,10 @@
 				scales: {
 
 					yAxes: [{
+						scaleLabel: {
+							display: true,
+							labelString: TargentName
+						},
 						stacked: true,
 						ticks: {
 							fontColor: "rgba(0,0,0,0.5)",
@@ -655,7 +669,6 @@
 		var basesaleobj = {}
 		var serverData = {{BaseSaleData|safe}}
 
-		console.log('=== Baseline Composition Over Time === ');
 		
 		
 		for (const[index, [key, value]] of Object.entries(Object.entries(serverData))) {
@@ -675,7 +688,6 @@
 			basesaleData.push({...basesaleobj})
 		
 		}
-		console.log(basesaleData);
 		var myhtmllegendchartBaseline = new Chart(htmllegendchartBaseline, {
 			type: 'line',
 			data: {
@@ -717,7 +729,7 @@
 					yAxes: [{
 					scaleLabel: {
 						display: true,
-						labelString: 'Revenue'
+						labelString: TargentName
 					},
 					ticks: {
 						callback:function(value , index) {

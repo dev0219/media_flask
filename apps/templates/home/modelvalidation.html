@@ -35,7 +35,7 @@
 					</div>
 					<div class="card-body">
 						<div class="chart-container">
-							<canvas id="multipleLineChart"></canvas>
+							<canvas id="multipleLineChart" height="100px"></canvas>
 						</div>
 					</div>
 				</div>
@@ -52,7 +52,7 @@
 								<div class="col-7 col-stats">
 									<div class="numbers">
 										<p class="card-category">Train Error</p>
-										<h4 class="card-title">7.6%</h4>
+										<h4 class="card-title">{{Trainerror}}%</h4>
 									</div>
 								</div>
 							</div>
@@ -69,7 +69,7 @@
 								<div class="col-7 col-stats">
 									<div class="numbers">
 										<p class="card-category">Test Error</p>
-										<h4 class="card-title">9.3%</h4>
+										<h4 class="card-title">{{Testerror}}%</h4>
 									</div>
 								</div>
 							</div>
@@ -109,12 +109,37 @@
 	<script src="/static/assets/js/demo.js"></script>
 	
 	<script>		
-		multipleLineChart = document.getElementById('multipleLineChart').getContext('2d')
-		var myMultipleLineChart = new Chart(multipleLineChart, {
-			type: 'line',
-			data: {
-				labels: {{labels2|safe}},
-				datasets: [{
+
+
+		var originalLineDraw = Chart.controllers.line.prototype.draw;
+		Chart.helpers.extend(Chart.controllers.line.prototype, {
+		draw: function() {
+			originalLineDraw.apply(this, arguments);
+
+			var chart = this.chart;
+			var ctx = chart.chart.ctx;
+
+			var index = chart.config.data.lineAtIndex;
+			if (index) {
+			var xaxis = chart.scales['x-axis-0'];
+			var yaxis = chart.scales['y-axis-0'];
+
+			ctx.save();
+			ctx.beginPath();
+			ctx.moveTo(xaxis.getPixelForValue(undefined, index), yaxis.top);
+			ctx.strokeStyle = 'red';
+			ctx.lineTo(xaxis.getPixelForValue(undefined, index), yaxis.bottom);
+			ctx.stroke();
+			ctx.restore();
+			}
+		}
+		});
+
+		var config = {
+		type: 'line',
+		data: {
+			labels: {{labels2|safe}},
+			datasets: [{
 					label: "{{first|safe}}",
 					borderColor: "#1d7af3",
 					pointBorderColor: "#FFF",
@@ -153,9 +178,8 @@
 					fill: true,
 					borderWidth: 2,
 					data: {{predRevTest|safe}}
-				}]
-			},
-			options : {
+				}],
+				options : {
 				responsive: true, 
 				maintainAspectRatio: false,
 				legend: {
@@ -177,19 +201,6 @@
 					}
 				},
 				scales: {
-					// xAxes: [{
-					// 	ticks: {
-					// 		callback:function(value , index) {
-					// 			var xs ='';
-					// 			if(value/1000 > 0) {
-					// 				xs = '$'+value/1000+'K'
-					// 			}else{
-					// 				xs ='-$'+value/1000*(-1)+'K'
-					// 			}
-					// 			return xs;
-					// 		}
-					// 	}
-					// }],
 					yAxes: [{
 						scaleLabel: {
 							display: true,
@@ -205,10 +216,13 @@
 				layout:{
 					padding:{left:15,right:15,top:15,bottom:15}
 				}
-			}
-		});
+			},
+			lineAtIndex: {{NumArr[0]|safe}}
+		}
+		};
 
-	
+		var multipleLineChart = document.getElementById('multipleLineChart').getContext('2d')
+		new Chart(multipleLineChart, config);	
 	</script>
 
 {% endblock javascripts %}
